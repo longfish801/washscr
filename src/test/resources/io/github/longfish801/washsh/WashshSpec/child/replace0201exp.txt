@@ -1,0 +1,9 @@
+これは試験１です。
+This is TEST1.
+
+これは試験２です。これは試験３です。これは試験４です。
+This is TEST2. This is TEST3. This is test*4.
+
+// 対象外
+これはテスト５です。
+This is test#5.

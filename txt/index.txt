@@ -1,0 +1,19 @@
+
+【＃タイトル】washsh
+
+■概要
+
+　washshスクリプトで文字列処理をします。
+　washshスクリプトは、テキストの整形に特化したスクリプトです。
+
+■ドキュメント
+
+・【リンク：Washsh記法：washsh.html】
+
+■API仕様書
+
+　API仕様書(Groovydoc)は以下を参照してください。
+
+・【リンク：Groovydoc：groovydoc/index.html】
+
+以上

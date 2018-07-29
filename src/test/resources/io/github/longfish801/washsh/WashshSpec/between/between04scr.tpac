@@ -1,0 +1,32 @@
+#! washsh between04
+
+## between 行番号付与
+#-bgn \-{5} [A-Z]
+#-end \-{5}
+#-divhandle exclude
+#-judge #判定
+
+# call 行番号付与
+#-combi #行番号付与
+
+## between 区切り行置き換え
+#-bgn \-{5} [A-Z]
+#-end \-{5}
+#-divhandle delete
+#-judge #判定
+
+# call 区切り行付与
+#-combi #区切り行付与
+
+## map
+# dec
+	import io.github.longfish801.shared.util.TextUtil;
+# args
+	List<String> lines
+# closure 行番号付与
+	return TextUtil.addLineNo(lines);
+# closure 判定
+	return (lines[0] == '// 対象外')? false : true;
+# closure 区切り行付与
+	if (config.'call#区切り行付与'.isLast) lines << '=====';
+	return [ '-----', *lines ];

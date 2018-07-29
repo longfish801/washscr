@@ -1,0 +1,19 @@
+#! washsh slice03
+
+## slice
+#-div ^\-{3,} [A-Z]$
+#-divhandle exclude
+#-judge #判定
+
+# call 行番号付与
+#-combi #行番号付与
+
+## map
+# dec
+	import io.github.longfish801.shared.util.TextUtil;
+# args
+	List<String> lines
+# closure 行番号付与
+	return TextUtil.addLineNo(lines);
+# closure 判定
+	return (lines[0] == '// 対象外')? false : true;

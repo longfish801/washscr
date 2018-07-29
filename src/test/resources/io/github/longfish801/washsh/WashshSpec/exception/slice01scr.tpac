@@ -1,0 +1,14 @@
+#! washsh slice01exc
+
+## slice
+# call 行番号付与
+#-combi #行番号付与
+
+## map
+# dec
+	import io.github.longfish801.shared.util.TextUtil;
+# args
+	List<String> lines
+# closure 行番号付与
+	Integer.parseInt('a');
+	return TextUtil.addLineNo(lines);

@@ -1,0 +1,18 @@
+/*
+ * build.gradle
+ *
+ * Copyright (C) io.github.longfish801 All Rights Reserved.
+ */
+
+version = '0.1.00';
+
+dependencies {
+	compile 'ch.qos.logback:logback-classic:1.0.12';
+	compile 'io.github.longfish801:clmap:0.1.00';
+	compile 'io.github.longfish801:shared:0.1.00';
+	compile 'io.github.longfish801:tpac:0.1.00';
+	compile 'org.apache.commons:commons-lang3:3.3.2';
+	compile 'org.codehaus.groovy:groovy-all:2.4.11';
+	compile 'org.slf4j:slf4j-api:1.7.5';
+	testCompile 'org.spockframework:spock-core:1.0-groovy-2.4';
+}

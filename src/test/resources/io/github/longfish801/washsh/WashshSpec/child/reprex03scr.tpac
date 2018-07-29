@@ -1,0 +1,20 @@
+#! washsh reprex02
+
+## slice
+# reprex テスト
+#-judge #判定
+#-first #前処理
+#-last #後処理
+テスト([０-９]+)	試験$1
+test([0-9]+)	TEST#$1
+TEST#	test\*
+
+## map
+# args
+	List<String> lines
+# closure 判定
+	return (lines[0] == '// 対象外')? false : true;
+# closure 前処理
+	return [ '〈テスト０〉', *lines ];
+# closure 後処理
+	return [ *lines, '--- test0 ---' ];

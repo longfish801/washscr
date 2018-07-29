@@ -1,0 +1,13 @@
+#! washsh slice01
+
+## slice
+# call 範囲処理
+#-combi range#add
+
+## map range
+# args
+	List<String> lines
+# closure add
+	if (config.'call#範囲処理'.index == 0) lines.add(0, '--- ここから ---');
+	if (config.'call#範囲処理'.isLast) lines << '--- ここまで ---';
+	return lines;

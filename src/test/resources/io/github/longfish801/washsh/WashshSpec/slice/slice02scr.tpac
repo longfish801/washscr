@@ -1,0 +1,16 @@
+#! washsh slice02
+
+## slice
+#-div ^\-{3,} [A-Z]$
+#-divhandle include
+
+# call 行番号付与
+#-combi #行番号付与
+
+## map
+# dec
+	import io.github.longfish801.shared.util.TextUtil;
+# args
+	List<String> lines
+# closure 行番号付与
+	return TextUtil.addLineNo(lines);

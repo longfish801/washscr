@@ -1,0 +1,26 @@
+#! washsh slice04
+
+## slice 行番号付与
+#-div ^\-{3,} [A-Z]$
+#-divhandle exclude
+
+# call 行番号付与
+#-combi #行番号付与
+
+## slice 区切り行置き換え
+#-div ^\-{3,} [A-Z]$
+#-divhandle delete
+
+# call 区切り行付与
+#-combi #区切り行付与
+
+## map
+# dec
+	import io.github.longfish801.shared.util.TextUtil;
+# args
+	List<String> lines
+# closure 行番号付与
+	return TextUtil.addLineNo(lines);
+# closure 区切り行付与
+	if (config.'call#区切り行付与'.isLast) lines << '=====';
+	return [ '-----', *lines ];
