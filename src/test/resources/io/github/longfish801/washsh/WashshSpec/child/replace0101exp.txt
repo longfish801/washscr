@@ -1,5 +1,0 @@
-これは試験１です。
-This is TEST1.
-
-これは試験２です。これは試験３です。これは試験４です。
-This is TEST2. This is TEST3. This is TEST3.

@@ -8,7 +8,7 @@
 
 ■ドキュメント
 
-・【リンク：Washsh記法：washsh.html】
+・【リンク：washsh記法：washsh.html】
 
 ■API仕様書
 

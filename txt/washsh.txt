@@ -1,17 +1,23 @@
 
-【＃タイトル】Washsh記法
+【＃タイトル】washsh記法
 
 ■概要
 
-　Washsh記法は、washshスクリプトのための記法です。
+　washsh記法は、washshスクリプトのための記法です。
 　washshスクリプトは、テキストの整形に特化したスクリプトです。
-　文法は【リンク：TPAC記法：tpac.html】をベースにしています。
-　【リンク：Clmap記法：clmap.html】の拡張であり、Clmap記法のタグが使用できます。
+　文法は【リンク：tpac記法：/gitdoc/tpac/tpac.html】をベースにしています。
+　一部の処理には【リンク：clmap記法：/gitdoc/clmap/index.html】で記述したクロージャを使用します。
+
+■処理内容
+
+　テキストの整形はマーキング、範囲決定、整形実行の順序で実行します。
+　マーキングは、行毎にその種類を調べます。たとえば空行であったり、範囲の開始/終了を示す行ではないか調べます。
+　それを踏まえて、テキストをどのように分割するか範囲を決定します。
+　範囲ごとに、必要な整形処理をして出力します。
 
 ■構成
 
 　ファイルに記述する場合、文字コードは UTF-8としてください。
-　Clmap記法で使用できるタグはすべて使用できます。
 
 　先頭に宣言をひとつ持ちます。
 　タグ名は「washsh」です。
@@ -22,10 +28,65 @@
 ----- コード -----
 
 　宣言の次行から、タグを記述します。
-　タグには範囲指定タグと処理タグの二種類があります。
-　範囲指定タグによって指定された範囲内の文字列に対し、処理タグで指定された処理をします。
+　タグには範囲タグと処理タグの二種類があります。
+　範囲タグによって指定された範囲内の文字列に対し、処理タグで指定された処理をします。
 
-■範囲指定タグ
+■範囲タグ
+
+----- コード -----
+#! washsh
+#-masking
+#	-bgn ／＊
+#	-end ＊／
+#> range
+#>> divided	囲み記事
+#-div －－－
+#
+
+#>> enclosed	コメント
+#-bgn /*
+#-end */
+#
+
+#>> complex 箇条書き
+#-kindof
+#	-箇条書き開始 ~\t*・(.+)
+#-enter
+{ int lineNo ->
+	return (kinds[lineNo] == '箇条書き開始行');
+}
+#-escape
+{ int lineNo ->
+	Closure digLines;
+	digLines = { int idx ->
+		if (idx >= kinds.size()) return true;
+		if (kinds[idx] == 'empty') return digLines(idx + 1);
+		return (kinds[idx] != '箇条書き開始行');
+	}
+	return digLines(lineNo + 1);
+}
+#
+
+#> format
+#>> replace
+テスト	試験
+#
+
+#>> delete
+#-include
+#	_コラム#bgn
+#	_コラム#end
+#
+
+#>> call
+#-include コラム
+{ String text -> return text; }
+#>> call
+#-include 箇条書き
+{ String text -> return text.replaceAll('・(.+)', '<li>$1</li>'); }
+#
+----- コード -----
+
 □sliceタグ
 
 　betweenタグは、区切り行で分割した各行を処理タグに渡します。
@@ -187,9 +248,9 @@
 　クロージャ呼び出し時、暗黙の引数 configに以下の情報を格納します。
 
 －config.{ID}.index
-　→範囲指定タグで分割された範囲の位置（0始まり）
+　→範囲タグで分割された範囲の位置（0始まり）
 －config.{ID}.isLast
-　→範囲指定タグで分割された範囲の、最後の範囲か否か
+　→範囲タグで分割された範囲の、最後の範囲か否か
 
 　IDは、タグ名と名前を半角シャープ(#)で連結した文字列です。
 　たとえば以下は、まず空行区切りで分割します。

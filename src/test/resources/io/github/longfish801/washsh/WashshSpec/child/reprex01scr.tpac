@@ -1,6 +1,0 @@
-#! washsh reprex01
-
-## slice
-# reprex テスト
-テスト([０-９]+)	試験$1
-test([0-9]+)	TEST#$1

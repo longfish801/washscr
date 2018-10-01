@@ -1,0 +1,66 @@
+#! tpac
+#> case 01
+#-script
+	#! washsh
+#-target
+Hello, World.
+Hello, Washsh.
+#-expected
+Hello, World.
+Hello, Washsh.
+#
+
+#> case 02
+#-script
+	#! washsh
+	#-masking
+	#	-bgn ／＊
+	#	-end ＊／
+	#> format
+	#>> replace
+Hello	Goodbye
+#-target
+Hello, World.
+／＊
+Hello, Washsh.
+
+Hello, World.
+＊／
+Hello, Washsh.
+#-expected
+Goodbye, World.
+／＊
+Hello, Washsh.
+
+Hello, World.
+＊／
+Goodbye, Washsh.
+#
+
+#> case 03
+#-script
+	#! washsh
+	#-masking
+	#	-bgn ~／＊+
+	#	-end ~＊+／
+	#> format
+	#>> replace
+Hello	Goodbye
+#-target
+Hello, World.
+／＊＊＊
+Hello, Washsh.
+
+Hello, World.
+＊＊＊／
+Hello, Washsh.
+#-expected
+Goodbye, World.
+／＊＊＊
+Hello, Washsh.
+
+Hello, World.
+＊＊＊／
+Goodbye, Washsh.
+#
+
