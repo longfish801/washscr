@@ -1,0 +1,196 @@
+#! tpac
+#> case 00
+#-script
+	#! washsh
+#-target
+Hello, World.
+Hello, Washsh.
+#-expected
+Hello, World.
+Hello, Washsh.
+#
+
+#> case 01
+#-script
+	#! washsh
+	#> format
+	#>> replace
+Hello	Goodbye
+#-target
+Hello, World.
+Hello, Washsh.
+#-expected
+Goodbye, World.
+Goodbye, Washsh.
+#
+
+#> case 02
+#-script
+	#! washsh
+	#> range
+	#>> mask
+	#-bgn ／＊
+	#-end ＊／
+	#> format
+	#>> replace
+Hello	Goodbye
+#-target
+Hello, World.
+／＊
+Hello, Washsh.
+＊／
+Hello, Groovy.
+#-expected
+Goodbye, World.
+Hello, Washsh.
+Goodbye, Groovy.
+#
+
+#> case 03
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#>> enclosed コメント
+	#-bgn /*
+	#-end */
+	#> format
+	#>> replace
+.	!
+	#>> replace 囲み記事
+	#-include 囲み記事
+Hello	Goodbye
+	#>> replace コメント
+	#-include コメント
+Hello	Hi
+#-target
+Hello, World.
+－－－
+Hello, Washsh.
+－－－
+Hello, Groovy.
+/*
+Hello, Washsh.
+*/
+Hello, World.
+#-expected
+Hello, World!
+－－－
+Goodbye, Washsh!
+－－－
+Hello, Groovy!
+/*
+Hi, Washsh!
+*/
+Hello, World!
+#
+
+#> case 04
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#>> enclosed コメント
+	#-bgn /*
+	#-end */
+	#> format
+	#>> replace
+.	!
+	#>> replace 囲み記事
+	#-include 囲み記事
+,	?
+	#>> call コメント
+	#-include コメント
+	#-bgn
+	{ String line -> return '/**'; }
+	#-end
+	{ String line -> return '**/'; }
+	#-text
+	{ List lines -> return lines.collect { it.toUpperCase() }; }
+
+#-target
+Hello, World.
+/*
+－－－
+Hello, Washsh.
+－－－
+Hello, Groovy.
+/*
+Hello, Washsh.
+*/
+*/
+Hello, World.
+#-expected
+Hello, World!
+/**
+－－－
+Hello? Washsh!
+－－－
+HELLO, GROOVY!
+/**
+HELLO, WASHSH!
+**/
+**/
+Hello, World!
+#
+
+#> case 05
+#-script
+	#! washsh
+	#> range
+	#>> tree 箇条書き
+	#-level
+	import java.util.regex.Matcher;
+	{ String line ->
+		if (!(line ==~ /(\t*)・.*/)) return -1;
+		return Matcher.getLastMatcher().group(1).length();
+	}
+	#-escape
+	{ int idx, int level ->
+		if (idx == lines.size() - 1) return true;
+		if (lines[idx + 1].kind == '箇条書き#bgn' && lines[idx + 1].level < level) return true;
+		return (lines[idx].kind == 'empty' && lines[idx + 1].kind != '箇条書き#bgn')? true : false;
+	}
+	#> format
+	#>> call 箇条書き
+	#-include 箇条書き
+	#-bgn
+	{ String line -> return '/--'; }
+	#-end
+	{ String line -> return '--/'; }
+
+#-target
+・１
+	・１ー１
+	・１ー２
+・２
+	・２ー１
+		・２ー１ー１
+		・２ー１ー２
+	・２ー２
+		・２ー２ー１
+・３
+#-expected
+/--
+・１
+/--
+	・１ー１
+	・１ー２
+--/
+・２
+/--
+	・２ー１
+/--
+		・２ー１ー１
+		・２ー１ー２
+--/
+	・２ー２
+/--
+		・２ー２ー１
+--/
+--/
+・３
+--/
+#

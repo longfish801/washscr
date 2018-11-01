@@ -1,0 +1,32 @@
+#! tpac
+#> case 00
+#-script
+	#! washsh
+	#> range
+	#>> divided コラム
+	#-div ~―+
+	#> format
+	#>> replace
+	#-include コラム
+Hello	Goodbye
+#-target
+Hello, Washsh.
+―――
+Hello, Java.
+―――
+Hello, World.
+―――
+Hello, Groovy.
+―――
+Hello, Washsh.
+#-expected
+Hello, Washsh.
+―――
+Goodbye, Java.
+―――
+Hello, World.
+―――
+Goodbye, Groovy.
+―――
+Hello, Washsh.
+#

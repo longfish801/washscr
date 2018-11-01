@@ -1,0 +1,73 @@
+#! tpac
+#> case 01
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#> format
+	#>> call
+	#-include 囲み記事
+	#-bgn
+	{ String line -> return '/*'; }
+	#-end
+	{ String line -> return '*/'; }
+	#-text
+	{ List lines -> return lines.collect { "・${it}" } }
+#-target
+Hello, World.
+－－－
+Hello, Groovy.
+－－－
+Hello, Washsh.
+#-expected
+Hello, World.
+/*
+・Hello, Groovy.
+*/
+Hello, Washsh.
+#
+
+#> case 02
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#> format
+	#>> call
+	#-include 囲み記事
+	#-bgn @/clmap:#cl('bgn#囲み記事')
+	#-end @/clmap:#cl('end#囲み記事')
+	#-text @/clmap:#cl('text#囲み記事')
+	#!!
+	
+	#! clmap
+	#> map bgn
+	#>> args
+	String line
+	#>> closure 囲み記事
+		return '/*';
+	#> map end
+	#>> args
+	String line
+	#>> closure 囲み記事
+		return '*/';
+	#> map text
+	#>> args
+	List lines
+	#>> closure 囲み記事
+		return lines.collect { "・${it}" };
+#-target
+Hello, World.
+－－－
+Hello, Groovy.
+－－－
+Hello, Washsh.
+#-expected
+Hello, World.
+/*
+・Hello, Groovy.
+*/
+Hello, Washsh.
+#

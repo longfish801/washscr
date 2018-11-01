@@ -1,0 +1,15 @@
+#! tpac
+#> case 01
+#-script
+	#! washsh
+	#> format
+	#>> reprex
+W([\w+])	w$1
+\,	?
+#-target
+Hello, World.
+Hello, Washsh.
+#-expected
+Hello? world.
+Hello? washsh.
+#

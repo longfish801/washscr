@@ -1,0 +1,82 @@
+#! tpac
+#> case 00
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#>> divided コラム
+	#-div ＝＝＝
+	#> format
+	#>> replace 囲み記事
+	#-include
+	#	_囲み記事
+	#	_コラム
+Hello	Goodbye
+#-target
+Hello, World.
+－－－
+Hello, Washsh.
+－－－
+Hello, Groovy.
+＝＝＝
+Hello, Washsh.
+＝＝＝
+Hello, World.
+#-expected
+Hello, World.
+－－－
+Goodbye, Washsh.
+－－－
+Hello, Groovy.
+＝＝＝
+Goodbye, Washsh.
+＝＝＝
+Hello, World.
+#
+
+#> case 01
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#>> divided コラム
+	#-div ＝＝＝
+	#>> divided ソース
+	#-div ～～～
+	#> format
+	#>> replace 囲み記事
+	#-exclude
+	#	_囲み記事
+	#	_コラム
+Hello	Goodbye
+#-target
+Hello, World.
+－－－
+Hello, Washsh.
+－－－
+Hello, Groovy.
+～～～
+Hello, Washsh.
+～～～
+Hello, Groovy.
+＝＝＝
+Hello, Washsh.
+＝＝＝
+Hello, World.
+#-expected
+Goodbye, World.
+－－－
+Hello, Washsh.
+－－－
+Goodbye, Groovy.
+～～～
+Goodbye, Washsh.
+～～～
+Goodbye, Groovy.
+＝＝＝
+Hello, Washsh.
+＝＝＝
+Goodbye, World.
+#

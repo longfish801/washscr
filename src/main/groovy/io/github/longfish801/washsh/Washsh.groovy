@@ -1,5 +1,5 @@
 /*
- * Clmap.groovy
+ * Washsh.groovy
  *
  * Copyright (C) io.github.longfish801 All Rights Reserved.
  */
@@ -9,33 +9,19 @@ import groovy.transform.InheritConstructors;
 import groovy.util.logging.Slf4j;
 import io.github.longfish801.clmap.Clinfo;
 import io.github.longfish801.clmap.Clmap;
-import io.github.longfish801.tpac.TpacMaker;
-import io.github.longfish801.washsh.conveyer.Conveyer;
-import io.github.longfish801.washsh.conveyer.ConveyerSystem;
+import io.github.longfish801.tpac.element.TeaDec;
+import io.github.longfish801.tpac.parser.TeaMakerMakeException;
+import java.util.regex.Pattern;
 
 /**
- * Washsh記法に沿って文字列を変換します。
- * @version 1.0.00 2017/07/27
+ * washsh記法に沿って文字列を変換します。
+ * @version 1.0.00 2018/09/17
  * @author io.github.longfish801
  */
 @Slf4j('LOG')
-@InheritConstructors
-class Washsh extends Clmap {
-	static {
-		// クロージャ情報のGroovyShellを上書きしておきます
-		Clinfo.shell = new GroovyShell(Washsh.classLoader);
-	}
-	
+class Washsh implements TeaDec {
 	/**
-	 * TPAC文書を解析するためのインスタンスとしてClmapMakerを返します。
-	 * @return TPAC文書を解析するためのインスタンス
-	 */
-	TpacMaker getMaker(){
-		return new WashshMaker();
-	}
-	
-	/**
-	 * Washsh記法に沿ってファイル内の文字列を変換します。<br>
+	 * washsh記法に沿ってファイル内の文字列を変換します。<br>
 	 * 文字コードは環境変数file.encodingで指定された値を使用します。
 	 * @param file 処理対象ファイル
 	 * @return 変換結果
@@ -45,7 +31,7 @@ class Washsh extends Clmap {
 	}
 	
 	/**
-	 * Washsh記法に沿ってファイル内の文字列を変換します。
+	 * washsh記法に沿ってファイル内の文字列を変換します。
 	 * @param file 処理対象ファイル
 	 * @param enc Washshを記述したファイルの文字コード
 	 * @return 変換結果
@@ -55,7 +41,7 @@ class Washsh extends Clmap {
 	}
 	
 	/**
-	 * Washsh記法に沿って文字列を変換します。
+	 * washsh記法に沿って文字列を変換します。
 	 * @param text 処理対象文字列
 	 * @return 変換結果
 	 */
@@ -64,7 +50,7 @@ class Washsh extends Clmap {
 	}
 	
 	/**
-	 * Washsh記法に沿って BufferedReaderから読みこんだ文字列を変換します。
+	 * washsh記法に沿って BufferedReaderから読みこんだ文字列を変換します。
 	 * @param reader 処理対象のBufferedReader
 	 * @return 変換結果
 	 */
@@ -75,19 +61,41 @@ class Washsh extends Clmap {
 	}
 	
 	/**
-	 * Washsh記法に沿って BufferedReaderから読みこんだ文字列を変換し、BufferdWriterに出力します。<br>
-	 * 例外発生時は WARNログを出力し、呼び元にスローします。
+	 * washsh記法に沿って BufferedReaderから読みこんだ文字列を変換し、BufferdWriterに出力します。
 	 * @param reader 処理対象のBufferedReader
-	 * @param outWriter 処理結果のBufferdWriter
+	 * @param writer 処理結果のBufferdWriter
+	 * @throws WashshRuntimeException washshスクリプト実行中に問題が起きました。
 	 */
 	void wash(BufferedReader reader, BufferedWriter writer){
-		LOG.debug('washsh実行開始 key={}', dec.key);
+		LOG.debug('washsh実行開始 key={}', key);
 		try {
-			ConveyerSystem.conveyBuffer(new ParentConveyer(this as Clmap).getConveyers(dec.lowers.values() as List), reader, writer);
+			// 行毎に分類します
+			List lines = [];
+			int lineNo = 1;
+			reader.eachLine { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : ''), 'lineNo' : lineNo ++ ] }
+			if (lowers['range:'] != null) lines = lowers['range:'].kindof(lines);
+			// タグ付けをします
+			TagText.Node node = new TagText().newInstanceNode('');
+			if (lowers['range:'] == null){
+				node << node.newInstanceLeaf();
+				lines.each { node.lowers.last() << it.line }
+			} else {
+				lowers['range:'].taggingSetup(lines);
+				lowers['range:'].tagging(lines, node, 0, lines.size() - 1);
+			}
+			// 整形します
+			lowers['format:']?.apply(node);
+			// 出力します
+			writer.withWriter { Writer wrtr -> node.write(wrtr) }
 		} catch (exc){
-			LOG.error('文字列変換中に問題が発生しました。key={}, exc={}', dec.key, exc.toString());
-			throw exc;
+			throw new WashshRuntimeException("washshスクリプト実行中に問題が起きました。key=${key}", exc);
 		}
-		LOG.debug("washsh実行終了 key={}", dec.key);
+		LOG.debug("washsh実行終了 key={}", key);
 	}
+	
+	/**
+	 * washshスクリプトの実行失敗を表す例外です。
+	 */
+	@InheritConstructors
+	class WashshRuntimeException extends Exception {}
 }
