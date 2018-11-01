@@ -1,0 +1,15 @@
+#! tpac
+#> case 01
+#-script
+	#! washsh
+	#> format
+	#>> replace
+Hello	Goodbye
+.	!
+#-target
+Hello, World.
+Hello, Washsh.
+#-expected
+Goodbye, World!
+Goodbye, Washsh!
+#

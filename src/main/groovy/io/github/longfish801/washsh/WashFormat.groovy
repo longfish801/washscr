@@ -9,6 +9,7 @@ import groovy.util.logging.Slf4j;
 import io.github.longfish801.shared.ArgmentChecker;
 import io.github.longfish801.tpac.element.TeaHandle;
 import io.github.longfish801.tpac.element.TpacRefer;
+import io.github.longfish801.tpac.element.TpacText;
 import io.github.longfish801.tpac.parser.TeaMakerMakeException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,19 +37,24 @@ class WashFormat implements TeaHandle {
 		if (map.include != null && !(map.include instanceof List)) throw new TeaMakerMakeException("includeはリストを指定してください。key=${key}");
 		if (map.exclude != null && !(map.exclude instanceof List)) throw new TeaMakerMakeException("excludeはリストを指定してください。key=${key}");
 		includeCmn = map.include ?: [];
-		excludeCmn = map.exclude ?: [];
+		excludeCmn = map.exclude ?: [ 'masked' ];
 	}
 	
 	/**
 	 * タグ付きテキストを整形します。
-	 * @param list タグ付きテキストのリスト
+	 * @param tagText タグ付きテキスト
 	 */
-	void apply(List<TagText> list){
-		list.each { TagText tagText ->
-			lowers.values().each {
-				if (it.inRange(tagText.tags, includeCmn, excludeCmn)) tagText.text = it.format(tagText.text)
+	void apply(TagText tagText){
+		Closure scanTagText;
+		scanTagText = { TagText curText ->
+			if (curText instanceof TagText.Node){
+				curText.lowers.each { scanTagText.call(it) }
+				lowers.values().each { if (it.inRange(curText.tag, includeCmn, excludeCmn)) it.editNode(curText) }
+			} else {
+				lowers.values().each { if (it.inRange(curText.upper?.tag, includeCmn, excludeCmn)) curText.lines = it.format(curText.lines) }
 			}
 		}
+		scanTagText.call(tagText);
 	}
 	
 	/**
@@ -76,14 +82,6 @@ class WashFormat implements TeaHandle {
 	}
 	
 	/**
-	 * deleteハンドルに対応するインスタンスを新規作成します。
-	 * @return deleteハンドルに対応するインスタンス
-	 */
-	WashDelete newInstanceDelete(){
-		return new WashDelete();
-	}
-	
-	/**
 	 * formatハンドルの下位ハンドルの操作の特性です。
 	 */
 	trait FormatOperator {
@@ -91,13 +89,6 @@ class WashFormat implements TeaHandle {
 		List includeList = [];
 		/** 処理対象外タグ一覧 */
 		List excludeList = [];
-		
-		/**
-		 * テキストを整形します。
-		 * @param text テキスト
-		 * @return 整形結果
-		 */
-		abstract String format(String text);
 		
 		/**
 		 * このハンドラの妥当性を検証します。
@@ -119,16 +110,31 @@ class WashFormat implements TeaHandle {
 		
 		/**
 		 * include, exclude指定から指定されたタグが該当するか判定します。
-		 * @param tags タグ一覧
+		 * @param tag タグ
 		 * @param includeCmn 共通処理対象タグ一覧
 		 * @param excludeCmn 共通処理対象外タグ一覧
 		 * @return タグが該当するか
 		 */
-		boolean inRange(List<String> tags, List includeCmn, List excludeCmn){
+		boolean inRange(String tag, List includeCmn, List excludeCmn){
 			List incList = includeList + includeCmn;
 			List excList = excludeList + excludeCmn;
-			return ((incList.empty || incList.any { tags.contains(it) }) && excList.every { !tags.contains(it) });
+			return ((incList.empty || incList.any { it == tag }) && excList.every { it != tag });
 		}
+		
+		/**
+		 * ノードを編集します。
+		 * @param node タグ付きテキストのノード
+		 */
+		void editNode(TagText.Node node){
+			// なにもしません
+		}
+		
+		/**
+		 * テキストを整形します。
+		 * @param lines 行リスト
+		 * @return 整形後の行リスト
+		 */
+		abstract List format(List lines);
 	}
 	
 	/**
@@ -150,20 +156,24 @@ class WashFormat implements TeaHandle {
 		
 		/**
 		 * テキストを整形します。
-		 * @param text テキスト
-		 * @return 整形結果
+		 * @param lines 行リスト
+		 * @return 整形後の行リスト
 		 */
-		String format(String text){
-			for (String findWord : repMap.keySet()){
-				text = text.replaceAll(Pattern.quote(findWord), Matcher.quoteReplacement(repMap[findWord]));
+		List format(List lines){
+			List newLines = [];
+			lines.each { String line ->
+				for (String findWord : repMap.keySet()){
+					line = line.replaceAll(Pattern.quote(findWord), Matcher.quoteReplacement(repMap[findWord]));
+				}
+				newLines << line;
 			}
-			return text;
+			return newLines;
 		}
 		
 		/**
 		 * 指定された文字列を行ごとに分割し、タブを含む行をタブ区切りとみなしてマップを作成します。
-		 * @param text 対象文字列
-		 * @return マップ
+		 * @param lines 対象文字列
+		 * @return 検索語と置換語とのマップ
 		 */
 		protected Map parseTextToMap(List lines){
 			Map map = [:];
@@ -181,15 +191,18 @@ class WashFormat implements TeaHandle {
 	class WashReprex extends WashReplace {
 		/**
 		 * テキストを整形します。
-		 * @param text テキスト
-		 * @return 整形結果
+		 * @param lines 行リスト
+		 * @return 整形後の行リスト
 		 */
-		@Override
-		String format(String text){
-			for (String findWord : repMap.keySet()){
-				text = text.replaceAll(findWord, repMap[findWord]);
+		List format(List lines){
+			List newLines = [];
+			lines.each { String line ->
+				for (String findWord : repMap.keySet()){
+					line = line.replaceAll(findWord, repMap[findWord]);
+				}
+				newLines << line;
 			}
-			return text;
+			return newLines;
 		}
 	}
 	
@@ -197,8 +210,12 @@ class WashFormat implements TeaHandle {
 	 * callハンドルです。
 	 */
 	class WashCall implements TeaHandle, FormatOperator {
-		/** クロージャ */
-		Closure formatCl;
+		/** bgnクロージャ */
+		Closure bgnCl;
+		/** endクロージャ */
+		Closure endCl;
+		/** textクロージャ */
+		Closure textCl;
 		
 		/**
 		 * このハンドラの妥当性を検証します。
@@ -206,42 +223,44 @@ class WashFormat implements TeaHandle {
 		@Override
 		void validate(){
 			FormatOperator.super.validate();
-			if (text.empty) throw new TeaMakerMakeException("置換文字列が定義されていません。key=${key}");
-			if ((scalar == null || !(scalar instanceof TpacRefer)) && text.empty){
-				throw new TeaMakerMakeException("整形処理のクロージャを参照あるいはテキストで定義してください。key=${key}");
+			if (map.size() == 0) throw new TeaMakerMakeException("整形処理のクロージャを最低ひとつ定義してください。key=${key}");
+			if (map.bgn != null){
+				if (!(map.bgn instanceof TpacRefer) && !(map.bgn instanceof TpacText)){
+					throw new TeaMakerMakeException("bgnは参照あるいはテキストで定義してください。key=${key}");
+				}
+				bgnCl = (map.bgn instanceof TpacText)? shell.evaluate(map.bgn.toString(), "${key}_bgn.groovy") : { String bgn -> map.bgn.refer().call(bgn) };
 			}
-			formatCl = (scalar instanceof TpacRefer)? scalar.refer() : shell.evaluate(text.toString(), "${key}_call.groovy");
+			if (map.end != null){
+				if (!(map.end instanceof TpacRefer) && !(map.end instanceof TpacText)){
+					throw new TeaMakerMakeException("endは参照あるいはテキストで定義してください。key=${key}");
+				}
+				endCl = (map.end instanceof TpacText)? shell.evaluate(map.end.toString(), "${key}_end.groovy") : { String end -> map.end.refer().call(end) };
+			}
+			if (map.text != null){
+				if (!(map.text instanceof TpacRefer) && !(map.text instanceof TpacText)){
+					throw new TeaMakerMakeException("textは参照あるいはテキストで定義してください。key=${key}");
+				}
+				textCl = (map.text instanceof TpacText)? shell.evaluate(map.text.toString(), "${key}_text.groovy") : { List lines -> map.text.refer().call(lines) };
+			}
 		}
 		
 		/**
-		 * テキストを整形します。
-		 * @param text テキスト
-		 * @return 整形結果
-		 */
-		String format(String text){
-			return formatCl.call(text);
-		}
-	}
-	
-	/**
-	 * deleteハンドルです。
-	 */
-	class WashDelete implements TeaHandle, FormatOperator {
-		/**
-		 * このハンドラの妥当性を検証します。
+		 * ノードを編集します。
+		 * @param node タグ付きテキストのノード
 		 */
 		@Override
-		void validate(){
-			FormatOperator.super.validate();
+		void editNode(TagText.Node node){
+			node.bgn = bgnCl?.call(node.bgn) ?: node.bgn;
+			node.end = endCl?.call(node.end) ?: node.end;
 		}
 		
 		/**
 		 * テキストを整形します。
-		 * @param text テキスト
-		 * @return 整形結果
+		 * @param lines 行リスト
+		 * @return 整形後の行リスト
 		 */
-		String format(String text){
-			return null;
+		List format(List lines){
+			return textCl?.call(lines) ?: lines;
 		}
 	}
 }

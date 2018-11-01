@@ -29,20 +29,21 @@ class WashFormatSpec extends Specification {
 		replace.text << "Hello\tGoodbye";
 		format << replace;
 		format.validateBasic();
-		TagText tagText = new TagText([]);
-		tagText.text = '''\
+		TagText.Node node = new TagText().newInstanceNode('');
+		node << node.newInstanceLeaf();
+		node.lowers.last().lines = '''\
 			Hello, World.
 			Hello, WashFormat.
-			'''.stripIndent();
-		String expected = '''\
+			'''.stripIndent().split(/\r\n|[\n\r]/);
+		List expected = '''\
 			Goodbye, World.
 			Goodbye, WashFormat.
-			'''.stripIndent();
+			'''.stripIndent().split(/\r\n|[\n\r]/);
 		
 		when:
-		format.apply([ tagText ]);
+		format.apply(node);
 		then:
-		tagText.text == expected;
+		node.lowers.last().lines == expected;
 	}
 	
 	def 'タグ付きテキストを整形します（reprex）。'(){
@@ -56,20 +57,21 @@ class WashFormatSpec extends Specification {
 		reprex.text << /W(.+)	w$1/;
 		format << reprex;
 		format.validateBasic();
-		TagText tagText = new TagText([]);
-		tagText.text = '''\
+		TagText.Node node = new TagText().newInstanceNode('');
+		node << node.newInstanceLeaf();
+		node.lowers.last().lines = '''\
 			Hello, World.
 			Hello, WashFormat.
-			'''.stripIndent();
-		String expected = '''\
+			'''.stripIndent().split(/\r\n|[\n\r]/);
+		List expected = '''\
 			Hello, world.
 			Hello, washFormat.
-			'''.stripIndent();
+			'''.stripIndent().split(/\r\n|[\n\r]/);
 		
 		when:
-		format.apply([ tagText ]);
+		format.apply(node);
 		then:
-		tagText.text == expected;
+		node.lowers.last().lines == expected;
 	}
 	
 	def 'タグ付きテキストを整形します（call）。'(){
@@ -80,56 +82,23 @@ class WashFormatSpec extends Specification {
 		WashFormat.WashCall call = format.newInstanceCall();
 		call.tag = 'call';
 		call.name = 'クロージャ呼出'
-		call.text << '{ String text -> return text.toUpperCase() }';
+		call.map.text = [ '{ List lines -> return lines.collect { it.toUpperCase() } }' ] as TpacText;
 		format << call;
 		format.validateBasic();
-		TagText tagText = new TagText([]);
-		tagText.text = '''\
+		TagText.Node node = new TagText().newInstanceNode('');
+		node << node.newInstanceLeaf();
+		node.lowers.last().lines = '''\
 			Hello, World.
 			Hello, WashFormat.
-			'''.stripIndent();
-		String expected = '''\
+			'''.stripIndent().split(/\r\n|[\n\r]/);
+		List expected = '''\
 			HELLO, WORLD.
 			HELLO, WASHFORMAT.
-			'''.stripIndent();
+			'''.stripIndent().split(/\r\n|[\n\r]/);
 		
 		when:
-		format.apply([ tagText ]);
+		format.apply(node);
 		then:
-		tagText.text == expected;
-	}
-	
-	def 'タグ付きテキストを整形します（delete）。'(){
-		given:
-		WashFormat format = new WashFormat();
-		format.tag = 'format';
-		format.name = '';
-		WashFormat.WashDelete delete = format.newInstanceDelete();
-		delete.tag = 'delete';
-		delete.name = '削除';
-		delete.map['include'] = [ 'コラム' ];
-		format << delete;
-		format.validateBasic();
-		TagText tagText1 = new TagText([]);
-		tagText1.text = '''\
-			Hello, World.
-			'''.stripIndent();
-		TagText tagText2 = new TagText([ 'コラム' ]);
-		tagText2.text = '''\
-			Hello, WashFormat.
-			'''.stripIndent();
-		TagText tagText3 = new TagText([]);
-		tagText3.text = '''\
-			Hello, Groovy.
-			'''.stripIndent();
-		String expected = '''\
-			Hello, World.
-			Hello, Groovy.
-			'''.stripIndent();
-		List tagTexts = [ tagText1, tagText2, tagText3 ];
-		when:
-		format.apply(tagTexts);
-		then:
-		tagTexts.collect { it.text ?: '' }.join() == expected;
+		node.lowers.last().lines == expected;
 	}
 }

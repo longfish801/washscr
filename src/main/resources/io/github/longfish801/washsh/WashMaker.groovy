@@ -1,8 +1,8 @@
 check {
-	valids = [ 'range', 'format', 'divided', 'enclosed', 'complex', 'replace', 'reprex', 'call', 'delete' ]
+	valids = [ 'range', 'format', 'mask', 'divided', 'enclosed', 'tree', 'replace', 'reprex', 'call' ]
 	hierarchy = [
 		'washsh' : [ 'range', 'format' ],
-		'range': [ 'divided', 'enclosed', 'complex' ],
-		'format': [ 'replace', 'reprex', 'call', 'delete' ]
+		'range': [ 'mask', 'divided', 'enclosed', 'tree' ],
+		'format': [ 'replace', 'reprex', 'call' ]
 	]
 }

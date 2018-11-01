@@ -1,0 +1,66 @@
+#! tpac
+#> case 00
+#-script
+	#! washsh
+	#> range
+	#>> enclosed 囲み記事
+	#-bgn ~＋－+
+	#-end ~－+＋
+	#> format
+	#>> replace
+	#-include 囲み記事
+Hello	Goodbye
+#-target
+Hello, Washsh.
+＋－－－
+Hello, Java.
+－－－＋
+Hello, World.
+＋－－－－
+Hello, Groovy.
+－－－－＋
+Hello, Washsh.
+#-expected
+Hello, Washsh.
+＋－－－
+Goodbye, Java.
+－－－＋
+Hello, World.
+＋－－－－
+Goodbye, Groovy.
+－－－－＋
+Hello, Washsh.
+#
+
+#> case 01
+#-script
+	#! washsh
+	#> range
+	#>> enclosed 囲み記事
+	#-bgn ~＋－+
+	#-end ~－+＋
+	#> format
+	#>> replace
+	#-include 囲み記事
+Hello	HelloHello
+#-target
+Hello, Washsh.
+＋－－－
+Hello, Java.
+＋－－－－
+Hello, World.
+－－－－＋
+Hello, Groovy.
+－－－＋
+Hello, Washsh.
+#-expected
+Hello, Washsh.
+＋－－－
+HelloHello, Java.
+＋－－－－
+HelloHello, World.
+－－－－＋
+HelloHello, Groovy.
+－－－＋
+Hello, Washsh.
+#

@@ -60,6 +60,11 @@ class WashMakerSpec extends Specification {
 		handle instanceof WashFormat;
 		
 		when:
+		handle = maker.newTeaHandle('mask', '', hndlRange);
+		then:
+		handle instanceof WashRange.WashMask;
+		
+		when:
 		handle = maker.newTeaHandle('divided', '', hndlRange);
 		then:
 		handle instanceof WashRange.WashDivided;
@@ -70,9 +75,9 @@ class WashMakerSpec extends Specification {
 		handle instanceof WashRange.WashEnclosed;
 		
 		when:
-		handle = maker.newTeaHandle('complex', '', hndlRange);
+		handle = maker.newTeaHandle('tree', '', hndlRange);
 		then:
-		handle instanceof WashRange.WashComplex;
+		handle instanceof WashRange.WashTree;
 		
 		when:
 		handle = maker.newTeaHandle('replace', '', hndlFormat);
@@ -88,11 +93,6 @@ class WashMakerSpec extends Specification {
 		handle = maker.newTeaHandle('call', '', hndlFormat);
 		then:
 		handle instanceof WashFormat.WashCall;
-		
-		when:
-		handle = maker.newTeaHandle('delete', '', hndlFormat);
-		then:
-		handle instanceof WashFormat.WashDelete;
 		
 		when:
 		handle = maker.newTeaHandle('nosuchtag', '', dec);

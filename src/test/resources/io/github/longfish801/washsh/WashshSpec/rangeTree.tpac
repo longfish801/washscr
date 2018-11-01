@@ -1,0 +1,86 @@
+#! tpac
+#> case 00
+#-script
+	#! washsh
+	#> range
+	#>> tree 箇条書き
+	#-level
+	import java.util.regex.Matcher;
+	{ String line ->
+		if (!(line ==~ /(\t*)・.*/)) return -1;
+		return Matcher.getLastMatcher().group(1).length();
+	}
+	#-escape
+	{ int idx, int level ->
+		if (idx == lines.size() - 1) return true;
+		if (lines[idx + 1].kind == '箇条書き#bgn' && lines[idx + 1].level < level) return true;
+		return (lines[idx].kind == 'empty' && lines[idx + 1].kind != '箇条書き#bgn')? true : false;
+	}
+	#> format
+	#>> replace
+	#-include 箇条書き
+Hello	Goodbye
+#-target
+Hello, Washsh.
+
+・Hello, Java.
+　Hello, World.
+・Hello, Groovy.
+
+Hello, Washsh.
+#-expected
+Hello, Washsh.
+
+・Goodbye, Java.
+　Goodbye, World.
+・Goodbye, Groovy.
+
+Hello, Washsh.
+#
+
+#> case 01
+#-script
+	#! washsh
+	#> range
+	#>> tree 箇条書き
+	#-level @/clmap:#cl('level#箇条書き')
+	#-escape @/clmap:#cl('escape#箇条書き')
+	#> format
+	#>> replace
+	#-include 箇条書き
+Hello	Goodbye
+	#!!
+	
+	#! clmap
+	#> map level
+	#>> dec
+	import java.util.regex.Matcher;
+	#>> args
+	String line
+	#>> closure 箇条書き
+		if (!(line ==~ /(\t*)・.*/)) return -1;
+		return Matcher.getLastMatcher().group(1).length();
+	#> map escape
+	#>> args
+	int idx, int level
+	#>> closure 箇条書き
+		if (idx == lines.size() - 1) return true;
+		if (lines[idx + 1].kind == '箇条書き#bgn' && lines[idx + 1].level < level) return true;
+		return (lines[idx].kind == 'empty' && lines[idx + 1].kind != '箇条書き#bgn')? true : false;
+#-target
+Hello, Washsh.
+
+・Hello, Java.
+　Hello, World.
+・Hello, Groovy.
+
+Hello, Washsh.
+#-expected
+Hello, Washsh.
+
+・Goodbye, Java.
+　Goodbye, World.
+・Goodbye, Groovy.
+
+Hello, Washsh.
+#

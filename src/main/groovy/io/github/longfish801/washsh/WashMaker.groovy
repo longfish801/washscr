@@ -50,13 +50,13 @@ class WashMaker implements TeaMaker {
 		switch (tag){
 			case 'range': range = new WashRange(); handle = range; break;
 			case 'format': format = new WashFormat(); handle = format; break;
+			case 'mask': handle = range.newInstanceMask(); break;
 			case 'divided': handle = range.newInstanceDivided(); break;
 			case 'enclosed': handle = range.newInstanceEnclosed(); break;
-			case 'complex': handle = range.newInstanceComplex(); break;
+			case 'tree': handle = range.newInstanceTree(); break;
 			case 'replace': handle = format.newInstanceReplace(); break;
 			case 'reprex': handle = format.newInstanceReprex(); break;
 			case 'call': handle = format.newInstanceCall(); break;
-			case 'delete': handle = format.newInstanceDelete(); break;
 		}
 		return handle;
 	}
