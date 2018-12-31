@@ -104,11 +104,11 @@ Hello, World!
 	#>> call コメント
 	#-include コメント
 	#-bgn
-	{ String line -> return '/**'; }
+	{ Map labels -> return '/**'; }
 	#-end
-	{ String line -> return '**/'; }
+	{ Map labels -> return '**/'; }
 	#-text
-	{ List lines -> return lines.collect { it.toUpperCase() }; }
+	{ List lines, Map labels -> return lines.collect { it.toUpperCase() }; }
 
 #-target
 Hello, World.
@@ -148,49 +148,89 @@ Hello, World!
 		return Matcher.getLastMatcher().group(1).length();
 	}
 	#-escape
-	{ int idx, int level ->
-		if (idx == lines.size() - 1) return true;
-		if (lines[idx + 1].kind == '箇条書き#bgn' && lines[idx + 1].level < level) return true;
-		return (lines[idx].kind == 'empty' && lines[idx + 1].kind != '箇条書き#bgn')? true : false;
+	import java.util.regex.Matcher;
+	{ int idx, int endIdx, int level, List lines ->
+		if (idx == endIdx) return true;
+		if (lines[idx] == '' && !(lines[idx + 1] ==~ /(\t*)・.*/)) return true;
+		int curLevel = (lines[idx + 1] ==~ /(\t*)・.*/)? Matcher.getLastMatcher().group(1).length() : -1;
+		return (curLevel >= 0 && curLevel < level);
 	}
 	#> format
 	#>> call 箇条書き
 	#-include 箇条書き
 	#-bgn
-	{ String line -> return '/--'; }
+	{ Map labels -> return '/=='; }
 	#-end
-	{ String line -> return '--/'; }
+	{ Map labels -> return '==/'; }
+	#>> call 箇条書き項目
+	#-include 箇条書き#elem
+	#-bgn
+	{ Map labels -> return '/--'; }
+	#-end
+	{ Map labels -> return '--/'; }
 
 #-target
 ・１
 	・１ー１
 	・１ー２
+	・１ー３
 ・２
 	・２ー１
 		・２ー１ー１
 		・２ー１ー２
+		　２ー１ー２＃２
+		・２ー１ー３
 	・２ー２
+	　２ー２＃２
 		・２ー２ー１
 ・３
 #-expected
+/==
 /--
 ・１
+/==
 /--
 	・１ー１
+--/
+/--
 	・１ー２
 --/
+/--
+	・１ー３
+--/
+==/
+--/
+/--
 ・２
+/==
 /--
 	・２ー１
+/==
 /--
 		・２ー１ー１
-		・２ー１ー２
 --/
+/--
+		・２ー１ー２
+		　２ー１ー２＃２
+--/
+/--
+		・２ー１ー３
+--/
+==/
+--/
+/--
 	・２ー２
+	　２ー２＃２
+/==
 /--
 		・２ー２ー１
 --/
+==/
 --/
+==/
+--/
+/--
 ・３
 --/
+==/
 #

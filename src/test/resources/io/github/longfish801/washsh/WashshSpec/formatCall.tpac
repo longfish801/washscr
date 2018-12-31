@@ -1,5 +1,5 @@
 #! tpac
-#> case 01
+#> case 00
 #-script
 	#! washsh
 	#> range
@@ -9,11 +9,11 @@
 	#>> call
 	#-include 囲み記事
 	#-bgn
-	{ String line -> return '/*'; }
+	{ Map labels -> return '/*'; }
 	#-end
-	{ String line -> return '*/'; }
+	{ Map labels -> return '*/'; }
 	#-text
-	{ List lines -> return lines.collect { "・${it}" } }
+	{ List lines, Map labels -> return lines.collect { "・${it}" } }
 #-target
 Hello, World.
 －－－
@@ -28,7 +28,7 @@ Hello, World.
 Hello, Washsh.
 #
 
-#> case 02
+#> case 01
 #-script
 	#! washsh
 	#> range
@@ -45,17 +45,17 @@ Hello, Washsh.
 	#! clmap
 	#> map bgn
 	#>> args
-	String line
+	Map labels
 	#>> closure 囲み記事
 		return '/*';
 	#> map end
 	#>> args
-	String line
+	Map labels
 	#>> closure 囲み記事
 		return '*/';
 	#> map text
 	#>> args
-	List lines
+	List lines, Map labels
 	#>> closure 囲み記事
 		return lines.collect { "・${it}" };
 #-target

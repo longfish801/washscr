@@ -18,7 +18,7 @@ import spock.lang.Specification;
  */
 @Slf4j('LOG')
 class WashFormatSpec extends Specification {
-	def 'タグ付きテキストを整形します（replace）。'(){
+	def 'テキスト範囲を整形します（replace）。'(){
 		given:
 		WashFormat format = new WashFormat();
 		format.tag = 'format';
@@ -29,7 +29,7 @@ class WashFormatSpec extends Specification {
 		replace.text << "Hello\tGoodbye";
 		format << replace;
 		format.validateBasic();
-		TagText.Node node = new TagText().newInstanceNode('');
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		node << node.newInstanceLeaf();
 		node.lowers.last().lines = '''\
 			Hello, World.
@@ -46,7 +46,7 @@ class WashFormatSpec extends Specification {
 		node.lowers.last().lines == expected;
 	}
 	
-	def 'タグ付きテキストを整形します（reprex）。'(){
+	def 'テキスト範囲を整形します（reprex）。'(){
 		given:
 		WashFormat format = new WashFormat();
 		format.tag = 'format';
@@ -57,7 +57,7 @@ class WashFormatSpec extends Specification {
 		reprex.text << /W(.+)	w$1/;
 		format << reprex;
 		format.validateBasic();
-		TagText.Node node = new TagText().newInstanceNode('');
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		node << node.newInstanceLeaf();
 		node.lowers.last().lines = '''\
 			Hello, World.
@@ -74,7 +74,7 @@ class WashFormatSpec extends Specification {
 		node.lowers.last().lines == expected;
 	}
 	
-	def 'タグ付きテキストを整形します（call）。'(){
+	def 'テキスト範囲を整形します（call）。'(){
 		given:
 		WashFormat format = new WashFormat();
 		format.tag = 'format';
@@ -82,10 +82,10 @@ class WashFormatSpec extends Specification {
 		WashFormat.WashCall call = format.newInstanceCall();
 		call.tag = 'call';
 		call.name = 'クロージャ呼出'
-		call.map.text = [ '{ List lines -> return lines.collect { it.toUpperCase() } }' ] as TpacText;
+		call.map.text = [ '{ List lines, Map labels -> return lines.collect { it.toUpperCase() } }' ] as TpacText;
 		format << call;
 		format.validateBasic();
-		TagText.Node node = new TagText().newInstanceNode('');
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		node << node.newInstanceLeaf();
 		node.lowers.last().lines = '''\
 			Hello, World.

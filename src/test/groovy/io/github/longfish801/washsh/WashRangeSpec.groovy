@@ -37,24 +37,17 @@ class WashRangeSpec extends Specification {
 			＊／
 			Hello, Groovy.
 			'''.stripIndent();
-		List lines = [];
-		target.split(/\r\n|[\n\r]/).each { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : '') ] }
-		TagText.Node node = new TagText().newInstanceNode('');
+		List lines = target.split(/\r\n|[\n\r]/);
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		
 		when:
-		lines = range.kindof(lines);
-		then:
-		lines.collect { it.kind } == [ '', 'masked#bgn', '', 'masked#end', '' ];
-		
-		when:
-		range.taggingSetup(lines);
 		range.tagging(lines, node, 0, lines.size() - 1);
 		then:
 		node.lowers.size() == 3;
 		node.lowers[0].lines == [ 'Hello, World.' ];
 		node.lowers[1].lowers.size() == 1;
-		node.lowers[1].bgn == null;
-		node.lowers[1].end == null;
+		node.lowers[1].labels.bgn == null;
+		node.lowers[1].labels.end == null;
 		node.lowers[1].lowers[0].lines == [ 'Hello, WashRange.' ];
 		node.lowers[2].lines == [ 'Hello, Groovy.' ];
 	}
@@ -77,24 +70,17 @@ class WashRangeSpec extends Specification {
 			－－－
 			Hello, Groovy.
 			'''.stripIndent();
-		List lines = [];
-		target.split(/\r\n|[\n\r]/).each { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : '') ] }
-		TagText.Node node = new TagText().newInstanceNode('');
+		List lines = target.split(/\r\n|[\n\r]/);
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		
 		when:
-		lines = range.kindof(lines);
-		then:
-		lines.collect { it.kind } == [ '', '囲み記事#div', '', '囲み記事#div', '' ];
-		
-		when:
-		range.taggingSetup(lines);
 		range.tagging(lines, node, 0, lines.size() - 1);
 		then:
 		node.lowers.size() == 3;
 		node.lowers[0].lines == [ 'Hello, World.' ];
 		node.lowers[1].lowers.size() == 1;
-		node.lowers[1].bgn == '－－－';
-		node.lowers[1].end == '－－－';
+		node.lowers[1].labels.bgn == '－－－';
+		node.lowers[1].labels.end == '－－－';
 		node.lowers[1].lowers[0].lines == [ 'Hello, WashRange.' ];
 		node.lowers[2].lines == [ 'Hello, Groovy.' ];
 	}
@@ -118,24 +104,17 @@ class WashRangeSpec extends Specification {
 			【ここまで】
 			Hello, Groovy.
 			'''.stripIndent();
-		List lines = [];
-		target.split(/\r\n|[\n\r]/).each { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : '') ] }
-		TagText.Node node = new TagText().newInstanceNode('');
+		List lines = target.split(/\r\n|[\n\r]/);
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		
 		when:
-		lines = range.kindof(lines);
-		then:
-		lines.collect { it.kind } == [ '', 'コラム#bgn', '', 'コラム#end', '' ];
-		
-		when:
-		range.taggingSetup(lines);
 		range.tagging(lines, node, 0, lines.size() - 1);
 		then:
 		node.lowers.size() == 3;
 		node.lowers[0].lines == [ 'Hello, World.' ];
 		node.lowers[1].lowers.size() == 1;
-		node.lowers[1].bgn == '【ここから】';
-		node.lowers[1].end == '【ここまで】';
+		node.lowers[1].labels.bgn == '【ここから】';
+		node.lowers[1].labels.end == '【ここまで】';
 		node.lowers[1].lowers[0].lines == [ 'Hello, WashRange.' ];
 		node.lowers[2].lines == [ 'Hello, Groovy.' ];
 	}
@@ -156,11 +135,12 @@ class WashRangeSpec extends Specification {
 			}
 			'''.stripIndent().split(/\r\n|[\n\r]/) as TpacText;
 		tree.map.escape = '''\
-			{ int idx, int level ->
-				if (idx == lines.size() - 1) return true;
-				if (lines[idx].kind != 'empty') return false;
-				if (lines[idx + 1].kind != '箇条書き#bgn') return true;
-				return (lines[idx + 1].kind == '箇条書き#bgn' || lines[idx + 1].level < level);
+			import java.util.regex.Matcher;
+			{ int idx, int endIdx, int level, List lines ->
+				if (idx == endIdx) return true;
+				if (lines[idx] == '' && !(lines[idx + 1] ==~ /(\t*)・.*/)) return true;
+				int  curLevel = (lines[idx + 1] ==~ /(\t*)・.*/)? Matcher.getLastMatcher().group(1).length() : -1;
+				return (curLevel >= 0 && curLevel < level);
 			}
 			'''.stripIndent().split(/\r\n|[\n\r]/) as TpacText;
 		range << tree;
@@ -171,26 +151,22 @@ class WashRangeSpec extends Specification {
 			
 			Hello, Groovy.
 			'''.stripIndent();
-		List lines = [];
-		target.split(/\r\n|[\n\r]/).each { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : '') ] }
-		TagText.Node node = new TagText().newInstanceNode('');
+		List lines = target.split(/\r\n|[\n\r]/);
+		TextRange.Node node = new TextRange().newInstanceNode('');
 		
 		when:
-		lines = range.kindof(lines);
-		then:
-		lines.collect { it.kind } == [ '', '箇条書き#bgn', '', 'empty', '' ];
-		lines.collect { it.level } == [ null, 0, null, null, null ];
-		
-		when:
-		range.taggingSetup(lines);
 		range.tagging(lines, node, 0, lines.size() - 1);
 		then:
 		node.lowers.size() == 3;
 		node.lowers[0].lines == [ 'Hello, World.' ];
+		node.lowers[1].name == '箇条書き';
+		node.lowers[1].labels.first == '・Hello, WashRange.';
+		node.lowers[1].labels.level == 0;
 		node.lowers[1].lowers.size() == 1;
-		node.lowers[1].bgn == null;
-		node.lowers[1].end == null;
-		node.lowers[1].lowers[0].lines == [ '・Hello, WashRange.', '' ];
+		node.lowers[1].lowers[0].name == '箇条書き#elem';
+		node.lowers[1].lowers[0].labels.number == 1;
+		node.lowers[1].lowers[0].lowers.size() == 1;
+		node.lowers[1].lowers[0].lowers[0].lines == [ '・Hello, WashRange.', '' ];
 		node.lowers[2].lines == [ 'Hello, Groovy.' ];
 	}
 }

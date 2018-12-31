@@ -51,6 +51,10 @@
 ・includeが空、もしくは includeのいずれかひとつでも範囲名が一致する
 ・excludeのどれとも範囲名が一致しない
 
+　各範囲には、範囲タグごとに独自のラベルを付与します。
+　出力時、bgn, endラベルの値をそれぞれ開始行、終端行として出力します。
+　これを変更したい場合は整形タグの callタグを利用してください。
+
 ■範囲タグ
 □maskタグ
 
@@ -86,6 +90,11 @@
 #-div －－－
 ----- コード -----
 
+　dividedタグによる範囲は、以下のラベルを持ちます。
+
+・bgn : 区切り行
+・end : 区切り行
+
 □enclosedタグ
 
 　enclosedタグで開始行と終端行に挟まれた範囲を定義します。
@@ -105,25 +114,28 @@
 #-end */
 ----- コード -----
 
+　enclosedタグによる範囲は、以下のラベルを持ちます。
+
+・bgn : 開始行
+・end : 終端行
+
 □treeタグ
 
-　treeタグで開始と終端位置の条件が複雑な範囲を定義します。
+　treeタグでツリー構造の範囲を定義します。
+　ツリー構造はひとつの枝に複数の葉があり、それが入れ子になる構造です。
 　treeタグには名前が必須です。
-　入れ子にすることができます。
+　枝の範囲名は treeタグの名前、葉の範囲名は treeタグの名前の後ろに "#elem"を付与したものになります。
 
 　マップでキー level, escapeを指定します。level, escapeどちらも必須です。
-　levelは開始位置を含む行ならば階層を返すクロージャを指定します。
+　levelは、走査している行が葉の開始であれば、その階層を返すクロージャを指定します。
 　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。
 　引数は走査位置の行文字列です。
-　戻り値として開始位置でなければ -1を、そうでなければ階層（0始まり）を intで返してください。
-　escapeは終端位置か否か判定するクロージャを指定します。
-　このクロージャは開始位置を含む行より後の行から呼びます。
+　戻り値として葉の開始でなければ -1を、そうでなければ階層（0始まり）を intで返してください。
+　escapeは枝の終端か否か判定するクロージャを指定します。
+　このクロージャは葉の開始行以降から呼びます。
 　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。
-　第一引数は行の位置、第二引数は階層です。
+　第一引数は行の位置、第二引数は走査終了位置、第三引数は階層、第四引数はすべての行のリストです。
 　戻り値として終端位置か否か判定を booleanで返してください。
-　大域変数として linesが使用できます。
-　これは行毎にキー lineで行文字列を、kindで行の種類を格納したマップのリストです。
-　行の種類は、空文字ならば "empty"、開始行ならば "${範囲名}#bgn"、それ以外は空文字となります。
 
 ----- コード -----
 #>> tree 箇条書き
@@ -134,13 +146,24 @@ import java.util.regex.Matcher;
 	return Matcher.getLastMatcher().group(1).length();
 }
 #-escape
-{ int idx, int level ->
-	if (idx == lines.size() - 1) return true;
-	if (lines[idx].kind != 'empty') return false;
-	if (lines[idx + 1].kind != '箇条書き#bgn') return true;
-	return (lines[idx + 1].kind == '箇条書き#bgn' || lines[idx + 1].level < level);
+import java.util.regex.Matcher;
+{ int idx, int endIdx, int level, List lines ->
+	if (idx == endIdx) return true;
+	if (lines[idx] == '' && !(lines[idx + 1] ==~ /(\t*)・.*/)) return true;
+	int curLevel = (lines[idx + 1] ==~ /(\t*)・.*/)? Matcher.getLastMatcher().group(1).length() : -1;
+	return (curLevel >= 0 && curLevel < level);
 }
 ----- コード -----
+
+　treeタグによる枝の範囲は、以下のラベルを持ちます。
+
+・first : 先頭の葉の一行目
+・level : 階層（0始まり）
+・size : 葉の個数
+
+　treeタグによる葉の範囲は、以下のラベルを持ちます。
+
+・number : 何個目の葉か（1始まり）
 
 ■整形タグ
 □replaceタグ
@@ -172,25 +195,25 @@ W([\w+])	w$1
 
 　callタグでクロージャによる整形処理を定義します。
 
-　マップでキー bgn, end, textを指定します。bgn, end, textいずれも省略可です。
+　マップでキー bgn, end, textを指定します。bgn, end, textいずれも省略可です。省略時は加工をしません。
 　bgn, endは開始行、終端行を加工するクロージャを指定します。
 　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。
-　引数は開始行、終端行の行文字列です。
+　引数はラベルです。
 　戻り値として加工後の文字列を Stringで返してください。なお、nullを返すと行を削除します。
 　textは範囲内の文字列を加工するクロージャを指定します。
 　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。
-　引数は範囲内の文字列を行毎に分割したリストです。各要素に改行コードは含みません。
+　引数は、第一引数は範囲内の文字列を行毎に分割したリストです。各要素に改行コードは含みません。第二引数はラベルです。
 　戻り値として加工後のリストを Listで返してください。なお、nullを返すと行を削除します。
 
 ----- コード -----
 #>> call コラム
 #-include コラム
 #-bgn
-{ String line -> return '【コラム：ここから】'; }
+{ Map labels -> return '【コラム：ここから】'; }
 #-end
-{ String line -> return '【コラム：ここまで】'; }
+{ Map labels -> return '【コラム：ここまで】'; }
 #-text
-{ List lines -> return lines.collect { "> ${it}" }; }
+{ List lines, Map labels -> return lines.collect { "> ${it}" }; }
 ----- コード -----
 
 以上
