@@ -69,18 +69,14 @@ class Washsh implements TeaDec {
 	void wash(BufferedReader reader, BufferedWriter writer){
 		LOG.debug('washsh実行開始 key={}', key);
 		try {
-			// 行毎に分類します
-			List lines = [];
-			int lineNo = 1;
-			reader.eachLine { lines << [ 'line' : it, 'kind' : ((it.empty)? 'empty' : ''), 'lineNo' : lineNo ++ ] }
-			if (lowers['range:'] != null) lines = lowers['range:'].kindof(lines);
-			// タグ付けをします
-			TagText.Node node = new TagText().newInstanceNode('');
+			// 処理対象をテキスト範囲に変換します
+			TextRange.Node node = new TextRange().newInstanceNode('');
 			if (lowers['range:'] == null){
 				node << node.newInstanceLeaf();
-				lines.each { node.lowers.last() << it.line }
+				reader.eachLine { node.lowers.last() << it }
 			} else {
-				lowers['range:'].taggingSetup(lines);
+				List lines = [];
+				reader.eachLine { lines << it }
 				lowers['range:'].tagging(lines, node, 0, lines.size() - 1);
 			}
 			// 整形します

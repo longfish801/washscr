@@ -41,20 +41,20 @@ class WashFormat implements TeaHandle {
 	}
 	
 	/**
-	 * タグ付きテキストを整形します。
-	 * @param tagText タグ付きテキスト
+	 * テキスト範囲を整形します。
+	 * @param textRange テキスト範囲
 	 */
-	void apply(TagText tagText){
-		Closure scanTagText;
-		scanTagText = { TagText curText ->
-			if (curText instanceof TagText.Node){
-				curText.lowers.each { scanTagText.call(it) }
-				lowers.values().each { if (it.inRange(curText.tag, includeCmn, excludeCmn)) it.editNode(curText) }
+	void apply(TextRange textRange){
+		Closure scanTextRange;
+		scanTextRange = { TextRange curText ->
+			if (curText instanceof TextRange.Node){
+				curText.lowers.each { scanTextRange.call(it) }
+				lowers.values().each { if (it.inRange(curText.name, includeCmn, excludeCmn)) it.editNode(curText) }
 			} else {
-				lowers.values().each { if (it.inRange(curText.upper?.tag, includeCmn, excludeCmn)) curText.lines = it.format(curText.lines) }
+				lowers.values().each { if (it.inRange(curText.upper?.name, includeCmn, excludeCmn)) curText.lines = it.format(curText) }
 			}
 		}
-		scanTagText.call(tagText);
+		scanTextRange.call(textRange);
 	}
 	
 	/**
@@ -123,18 +123,18 @@ class WashFormat implements TeaHandle {
 		
 		/**
 		 * ノードを編集します。
-		 * @param node タグ付きテキストのノード
+		 * @param node テキスト範囲のノード
 		 */
-		void editNode(TagText.Node node){
+		void editNode(TextRange.Node node){
 			// なにもしません
 		}
 		
 		/**
 		 * テキストを整形します。
-		 * @param lines 行リスト
+		 * @param leaf テキスト範囲のテキスト
 		 * @return 整形後の行リスト
 		 */
-		abstract List format(List lines);
+		abstract List format(TextRange.Leaf leaf);
 	}
 	
 	/**
@@ -156,12 +156,12 @@ class WashFormat implements TeaHandle {
 		
 		/**
 		 * テキストを整形します。
-		 * @param lines 行リスト
+		 * @param leaf テキスト範囲のテキスト
 		 * @return 整形後の行リスト
 		 */
-		List format(List lines){
+		List format(TextRange.Leaf leaf){
 			List newLines = [];
-			lines.each { String line ->
+			leaf.lines.each { String line ->
 				for (String findWord : repMap.keySet()){
 					line = line.replaceAll(Pattern.quote(findWord), Matcher.quoteReplacement(repMap[findWord]));
 				}
@@ -191,12 +191,12 @@ class WashFormat implements TeaHandle {
 	class WashReprex extends WashReplace {
 		/**
 		 * テキストを整形します。
-		 * @param lines 行リスト
+		 * @param leaf テキスト範囲のテキスト
 		 * @return 整形後の行リスト
 		 */
-		List format(List lines){
+		List format(TextRange.Leaf leaf){
 			List newLines = [];
-			lines.each { String line ->
+			leaf.lines.each { String line ->
 				for (String findWord : repMap.keySet()){
 					line = line.replaceAll(findWord, repMap[findWord]);
 				}
@@ -228,39 +228,39 @@ class WashFormat implements TeaHandle {
 				if (!(map.bgn instanceof TpacRefer) && !(map.bgn instanceof TpacText)){
 					throw new TeaMakerMakeException("bgnは参照あるいはテキストで定義してください。key=${key}");
 				}
-				bgnCl = (map.bgn instanceof TpacText)? shell.evaluate(map.bgn.toString(), "${key}_bgn.groovy") : { String bgn -> map.bgn.refer().call(bgn) };
+				bgnCl = (map.bgn instanceof TpacText)? shell.evaluate(map.bgn.toString(), "${key}_bgn.groovy") : { Map labels -> map.bgn.refer().call(labels) };
 			}
 			if (map.end != null){
 				if (!(map.end instanceof TpacRefer) && !(map.end instanceof TpacText)){
 					throw new TeaMakerMakeException("endは参照あるいはテキストで定義してください。key=${key}");
 				}
-				endCl = (map.end instanceof TpacText)? shell.evaluate(map.end.toString(), "${key}_end.groovy") : { String end -> map.end.refer().call(end) };
+				endCl = (map.end instanceof TpacText)? shell.evaluate(map.end.toString(), "${key}_end.groovy") : { Map labels -> map.end.refer().call(labels) };
 			}
 			if (map.text != null){
 				if (!(map.text instanceof TpacRefer) && !(map.text instanceof TpacText)){
 					throw new TeaMakerMakeException("textは参照あるいはテキストで定義してください。key=${key}");
 				}
-				textCl = (map.text instanceof TpacText)? shell.evaluate(map.text.toString(), "${key}_text.groovy") : { List lines -> map.text.refer().call(lines) };
+				textCl = (map.text instanceof TpacText)? shell.evaluate(map.text.toString(), "${key}_text.groovy") : { List lines, Map labels -> map.text.refer().call(lines, labels) };
 			}
 		}
 		
 		/**
 		 * ノードを編集します。
-		 * @param node タグ付きテキストのノード
+		 * @param node テキスト範囲のノード
 		 */
 		@Override
-		void editNode(TagText.Node node){
-			node.bgn = bgnCl?.call(node.bgn) ?: node.bgn;
-			node.end = endCl?.call(node.end) ?: node.end;
+		void editNode(TextRange.Node node){
+			node.labels.bgn = bgnCl?.call(node.labels) ?: node.labels.bgn;
+			node.labels.end = endCl?.call(node.labels) ?: node.labels.end;
 		}
 		
 		/**
 		 * テキストを整形します。
-		 * @param lines 行リスト
+		 * @param leaf テキスト範囲のテキスト
 		 * @return 整形後の行リスト
 		 */
-		List format(List lines){
-			return textCl?.call(lines) ?: lines;
+		List format(TextRange.Leaf leaf){
+			return textCl?.call(leaf.lines, leaf.upper.labels) ?: leaf.lines;
 		}
 	}
 }

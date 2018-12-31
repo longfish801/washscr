@@ -33,37 +33,13 @@ class WashRange implements TeaHandle {
 	}
 	
 	/**
-	 * 指定された行の種類を判定します。
+	 * テキスト範囲の下位要素を作成します。
 	 * @param lines 行リスト
-	 * @return 種類付き行リスト
-	 */
-	List kindof(List lines){
-		List newLines = [];
-		Iterator iterator = lines.iterator();
-		while(iterator.hasNext()){
-			Map map = iterator.next();
-			if (lowers.values().every { !it.kindof(map, newLines) }) newLines << map;
-			iterator.remove();
-		}
-		return newLines;
-	}
-	
-	/**
-	 * タグ付けの準備をします。
-	 * @param lines 種類付き行リスト
-	 */
-	void taggingSetup(List lines){
-		lowers.values().each { it.taggingSetup(lines) };
-	}
-	
-	/**
-	 * 行毎にタグ付けをします。
-	 * @param lines 種類付き行リスト
-	 * @param node タグ付きテキストのノード
+	 * @param node テキスト範囲のノード
 	 * @param bgnIdx 走査開始位置
 	 * @param endIdx 走査終了位置
 	 */
-	void tagging(List lines, TagText.Node node, int bgnIdx, int endIdx){
+	void tagging(List lines, TextRange.Node node, int bgnIdx, int endIdx){
 		int idx = bgnIdx;
 		int preIdx;
 		node << node.newInstanceLeaf();
@@ -72,9 +48,10 @@ class WashRange implements TeaHandle {
 			if (lowers.values().any { (idx = it.tagging(lines, node, idx, endIdx)) > preIdx }){
 				node << node.newInstanceLeaf();
 			} else {
-				node.lowers.last() << lines[idx ++].line;
+				node.lowers.last() << lines[idx ++];
 			}
 		}
+		if (node.lowers.last().lines.empty) node.lowers.removeLast();
 	}
 	
 	/**
@@ -114,30 +91,14 @@ class WashRange implements TeaHandle {
 	 */
 	trait RangeOperator {
 		/**
-		 * 指定された行の種類を判定します。
-		 * @param map 行マップ
-		 * @param newLines 種類付き行リスト
-		 * @return 種類の判定をしたか否か
-		 */
-		abstract boolean kindof(Map map, List newLines);
-		
-		/**
-		 * タグ付けの準備をします。
-		 * @param lines 種類付き行リスト
-		 */
-		void taggingSetup(List lines){
-			// なにもしません
-		}
-		
-		/**
-		 * 行毎にタグ付けをします。
-		 * @param lines 種類付き行リスト
-		 * @param node タグ付きテキストのノード
+		 * テキスト範囲の下位要素を作成します。
+		 * @param lines 行リスト
+		 * @param node テキスト範囲のノード
 		 * @param idx 走査位置
 		 * @param endIdx 走査終了位置
 		 * @return 新しい走査位置
 		 */
-		abstract int tagging(List lines, TagText.Node node, int idx, int endIdx);
+		abstract int tagging(List lines, TextRange.Node node, int idx, int endIdx);
 	}
 	
 	/**
@@ -179,53 +140,26 @@ class WashRange implements TeaHandle {
 		}
 		
 		/**
-		 * 指定された行の種類を判定します。
-		 * @param map 行マップ
-		 * @param newLines 種類付き行リスト
-		 * @return 種類の判定をしたか否か
-		 */
-		boolean kindof(Map map, List newLines){
-			if (inMask){
-				if (isMaskEnd.call(map.line, bgnLine)){
-					inMask = false;
-					bgnLine = null;
-					map.kind = 'masked#end';
-					newLines << map;
-					return true;
-				} else {
-					newLines << map;
-				}
-			} else {
-				if (isMaskBgn.call(map.line)){
-					inMask = true;
-					bgnLine = map.line;
-					map.kind = 'masked#bgn';
-					newLines << map;
-				}
-			}
-			return (map.kind == 'masked#end')? true : inMask;
-		}
-		
-		/**
-		 * 行毎にタグ付けをします。
-		 * @param lines 種類付き行リスト
-		 * @param node タグ付きテキストのノード
+		 * テキスト範囲の下位要素を作成します。
+		 * @param lines 行リスト
+		 * @param node テキスト範囲のノード
 		 * @param idx 走査位置
 		 * @param endIdx 走査終了位置
 		 * @return 新しい走査位置
 		 */
-		int tagging(List lines, TagText.Node node, int idx, int endIdx){
-			if (lines[idx].kind != 'masked#bgn') return idx;
+		int tagging(List lines, TextRange.Node node, int idx, int endIdx){
+			if (!isMaskBgn.call(lines[idx])) return idx;
 			int bgnIdx = idx;
-			TagText.Node maskedNode = node.newInstanceNode('masked');
+			TextRange.Node maskedNode = node.newInstanceNode('masked');
 			node << maskedNode;
 			maskedNode << node.newInstanceLeaf();
-			idx ++;
-			while (lines[idx].kind != 'masked#end'){
-				maskedNode.lowers.last() << lines[idx ++].line;
-				if (idx > endIdx) throw new WashRangeParseException("マスキング箇所の開始に対し、終了が記述されていません。key=${key} 行番号=${lines[bgnIdx].lineNo} 開始行=${lines[bgnIdx].line}");
+			while (true){
+				idx ++;
+				if (idx > endIdx) throw new WashRangeParseException("マスキング箇所の開始に対し、終了が記述されていません。key=${key} 行番号=${bgnIdx + 1} 開始行=${lines[bgnIdx]}");
+				if (isMaskEnd.call(lines[idx], lines[bgnIdx])) break;
+				maskedNode.lowers.last() << lines[idx];
 			}
-			return ++ idx;
+			return idx + 1;
 		}
 	}
 	
@@ -253,37 +187,25 @@ class WashRange implements TeaHandle {
 		}
 		
 		/**
-		 * 指定された行の種類を判定します。
-		 * @param map 行マップ
-		 * @param newLines 種類付き行リスト
-		 * @return 種類の判定をしたか否か
-		 */
-		boolean kindof(Map map, List newLines){
-			if (!isRangeDiv.call(map.line)) return false;
-			map.kind = "${name}#div";
-			newLines << map;
-			return true;
-		}
-		
-		/**
-		 * 行毎にタグ付けをします。
-		 * @param lines 種類付き行リスト
-		 * @param node タグ付きテキストのノード
+		 * テキスト範囲の下位要素を作成します。
+		 * @param lines 行リスト
+		 * @param node テキスト範囲のノード
 		 * @param idx 走査位置
 		 * @param endIdx 走査終了位置
 		 * @return 新しい走査位置
 		 */
-		int tagging(List lines, TagText.Node node, int idx, int endIdx){
-			if (lines[idx].kind != "${name}#div") return idx;
+		int tagging(List lines, TextRange.Node node, int idx, int endIdx){
+			if (!isRangeDiv.call(lines[idx])) return idx;
 			int bgnIdx = idx;
-			TagText.Node dividedNode = node.newInstanceNode(name);
-			node << dividedNode;
-			dividedNode.bgn = lines[idx ++].line;
-			while (lines[idx].kind != "${name}#div"){
-				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${lines[bgnIdx].lineNo} 開始行=${lines[bgnIdx].line}");
+			while (true){
 				idx ++;
+				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${bgnIdx + 1} 開始行=${lines[bgnIdx]}");
+				if (isRangeDiv.call(lines[idx])) break;
 			}
-			dividedNode.end = lines[idx].line;
+			TextRange.Node dividedNode = node.newInstanceNode(name);
+			node << dividedNode;
+			dividedNode.labels.bgn = lines[bgnIdx];
+			dividedNode.labels.end = lines[idx];
 			upper.tagging(lines, dividedNode, bgnIdx + 1, idx - 1);
 			return idx + 1;
 		}
@@ -325,54 +247,31 @@ class WashRange implements TeaHandle {
 		}
 		
 		/**
-		 * 指定された行の種類を判定します。
-		 * @param map 行マップ
-		 * @param newLines 種類付き行リスト
-		 * @return 種類の判定をしたか否か
-		 */
-		boolean kindof(Map map, List newLines){
-			switch (map.line){
-				case {isRangeBgn.call(it)}: map.kind = "${name}#bgn"; break;
-				case {isRangeEnd.call(it)}: map.kind = "${name}#end"; break;
-				default: return false;
-			}
-			newLines << map;
-			return true;
-		}
-		
-		/**
-		 * 行毎にタグ付けをします。
-		 * @param lines 種類付き行リスト
-		 * @param node タグ付きテキストのノード
+		 * テキスト範囲の下位要素を作成します。
+		 * @param lines 行リスト
+		 * @param node テキスト範囲のノード
 		 * @param idx 走査位置
 		 * @param endIdx 走査終了位置
 		 * @return 新しい走査位置
 		 */
-		int tagging(List lines, TagText.Node node, int idx, int endIdx){
-			if (lines[idx].kind != "${name}#bgn") return idx;
+		int tagging(List lines, TextRange.Node node, int idx, int endIdx){
+			if (!isRangeBgn.call(lines[idx])) return idx;
 			int bgnIdx = idx;
-			TagText.Node enclosedNode = node.newInstanceNode(name);
-			node << enclosedNode;
-			enclosedNode.bgn = lines[idx].line;
 			List stacks = [];
-			boolean loop = true;
-			while (loop){
+			while (true){
 				idx ++;
-				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${lines[bgnIdx].lineNo} 開始行=${lines[bgnIdx].line}");
-				switch (lines[idx].kind){
-					case "${name}#bgn":
-						stacks << idx;
-						break;
-					case "${name}#end":
-						if (stacks.size() == 0){
-							enclosedNode.end = lines[idx].line;
-							loop = false;
-						} else {
-							stacks.pop();
-						}
-						break;
+				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${bgnIdx + 1} 開始行=${lines[bgnIdx]}");
+				if (isRangeBgn.call(lines[idx])){
+					stacks << idx;
+				} else if (isRangeEnd.call(lines[idx])){
+					if (stacks.size() == 0) break;
+					stacks.pop();
 				}
 			}
+			TextRange.Node enclosedNode = node.newInstanceNode(name);
+			node << enclosedNode;
+			enclosedNode.labels.bgn = lines[bgnIdx];
+			enclosedNode.labels.end = lines[idx];
 			upper.tagging(lines, enclosedNode, bgnIdx + 1, idx - 1);
 			return idx + 1;
 		}
@@ -400,56 +299,49 @@ class WashRange implements TeaHandle {
 			if (map.escape == null || (!(map.escape instanceof TpacRefer) && !(map.escape instanceof TpacText))){
 				throw new TeaMakerMakeException("escapeは参照あるいはテキストで定義してください。key=${key}");
 			}
-			escapeCl = (map.escape instanceof TpacText)? shell.evaluate(map.escape.toString(), "${key}_escape.groovy") : { int idx, int level -> map.escape.refer().call(idx, level) };
+			escapeCl = (map.escape instanceof TpacText)? shell.evaluate(map.escape.toString(), "${key}_escape.groovy") : { int idx, int endIdx, int level, List lines -> map.escape.refer().call(idx, endIdx, level, lines) };
 		}
 		
 		/**
-		 * 指定された行の種類を判定します。
-		 * @param map 行マップ
-		 * @param newLines 種類付き行リスト
-		 * @return 種類の判定をしたか否か
-		 */
-		boolean kindof(Map map, List newLines){
-			int level = levelCl.call(map.line);
-			if (level < 0) return false;
-			newLines << [ 'line' : null, 'kind' : "${name}#bgn", 'level' : level ];
-			newLines << map;
-			return true;
-		}
-		
-		/**
-		 * タグ付けの準備をします。
-		 * @param lines 種類付き行リスト
-		 */
-		@Override
-		void taggingSetup(List lines){
-			if (map.escape instanceof TpacText){
-				escapeCl.setProperty('lines', lines);
-			} else {
-				map.escape.refer().properties['lines'] = lines;
-			}
-		}
-		
-		/**
-		 * 行毎にタグ付けをします。
-		 * @param lines 種類付き行リスト
-		 * @param node タグ付きテキストのノード
+		 * テキスト範囲の下位要素を作成します。
+		 * @param lines 行リスト
+		 * @param node テキスト範囲のノード
 		 * @param idx 走査位置
 		 * @param endIdx 走査終了位置
 		 * @return 新しい走査位置
 		 */
-		int tagging(List lines, TagText.Node node, int idx, int endIdx){
-			if (lines[idx].kind != "${name}#bgn") return idx;
-			if (node.tags.size() != lines[idx].level) return idx;
-			int bgnIdx = idx;
-			TagText.Node treeNode = node.newInstanceNode(name);
+		int tagging(List lines, TextRange.Node node, int idx, int endIdx){
+			int level = levelCl.call(lines[idx]);
+			if (level < 0) return idx;
+			if (node.upper != null && node.upper.name == name && node.upper.labels.level >= level) return idx;
+			TextRange.Node treeNode = node.newInstanceNode(name);
+			treeNode.labels.first = lines[idx];
+			treeNode.labels.level = level;
 			node << treeNode;
-			while (true){
-				idx ++;
-				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${lines[bgnIdx].lineNo} 開始行=${lines[bgnIdx].line}");
-				if (escapeCl.call(idx, lines[bgnIdx].level)) break;
+			int bgnIdx = idx;
+			int elemBgnIdx = idx;
+			int elemNo = 0;
+			Closure createElem = { int elemEndIdx ->
+				TextRange.Node elemNode = node.newInstanceNode("${name}#elem");
+				treeNode << elemNode;
+				elemNode.labels.number = ++ elemNo;
+				upper.tagging(lines, elemNode, elemBgnIdx, elemEndIdx);
 			}
-			upper.tagging(lines, treeNode, bgnIdx + 1, idx);
+			while (true){
+				int elemLevel = levelCl.call(lines[idx]);
+				if (idx > bgnIdx && elemLevel == level){
+					createElem.call(idx - 1);
+					elemBgnIdx = idx;
+				}
+				boolean isEscape = escapeCl.call(idx, endIdx, level, lines);
+				if (isEscape){
+					createElem.call(idx);
+					break;
+				}
+				idx ++;
+				if (idx > endIdx) throw new WashRangeParseException("範囲の開始に対し、終了が記述されていません。key=${key} 行番号=${bgnIdx + 1} 開始行=${lines[bgnIdx]}");
+			}
+			treeNode.labels.size = elemNo;
 			return idx + 1;
 		}
 	}

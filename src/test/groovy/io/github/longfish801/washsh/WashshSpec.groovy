@@ -138,7 +138,7 @@ class WashshSpec extends Specification {
 		
 		where:
 		caseNo	| comment
-		'01'	| '複数の検索語を置換'
+		'00'	| '複数の検索語を置換'
 	}
 	
 	@Unroll
@@ -151,7 +151,7 @@ class WashshSpec extends Specification {
 		
 		where:
 		caseNo	| comment
-		'01'	| '複数の検索語を置換'
+		'00'	| '複数の検索語を置換'
 	}
 	
 	@Unroll
@@ -164,7 +164,7 @@ class WashshSpec extends Specification {
 		
 		where:
 		caseNo	| comment
-		'01'	| 'テキストで指定'
-		'02'	| 'clmapで指定'
+		'00'	| 'テキストで指定'
+		'01'	| 'clmapで指定'
 	}
 }
