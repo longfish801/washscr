@@ -164,6 +164,7 @@ class WashRangeSpec extends Specification {
 		node.lowers[1].labels.level == 0;
 		node.lowers[1].lowers.size() == 1;
 		node.lowers[1].lowers[0].name == '箇条書き#elem';
+		node.lowers[1].lowers[0].labels.first == '・Hello, WashRange.';
 		node.lowers[1].lowers[0].labels.number == 1;
 		node.lowers[1].lowers[0].lowers.size() == 1;
 		node.lowers[1].lowers[0].lowers[0].lines == [ '・Hello, WashRange.', '' ];

@@ -321,14 +321,17 @@ class WashRange implements TeaHandle {
 			int bgnIdx = idx;
 			int elemBgnIdx = idx;
 			int elemNo = 0;
+			String firstLine;
 			Closure createElem = { int elemEndIdx ->
 				TextRange.Node elemNode = node.newInstanceNode("${name}#elem");
 				treeNode << elemNode;
+				elemNode.labels.first = firstLine;
 				elemNode.labels.number = ++ elemNo;
 				upper.tagging(lines, elemNode, elemBgnIdx, elemEndIdx);
 			}
 			while (true){
 				int elemLevel = levelCl.call(lines[idx]);
+				if (elemLevel == level) firstLine = lines[idx];
 				if (idx > bgnIdx && elemLevel == level){
 					createElem.call(idx - 1);
 					elemBgnIdx = idx;
