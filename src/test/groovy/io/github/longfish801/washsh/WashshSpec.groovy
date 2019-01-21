@@ -112,6 +112,7 @@ class WashshSpec extends Specification {
 		caseNo	| comment
 		'00'	| '箇条書きと段落の混在'
 		'01'	| 'clmapで指定'
+		'02'	| 'firstに先頭行を格納'
 	}
 	
 	@Unroll
@@ -166,5 +167,6 @@ class WashshSpec extends Specification {
 		caseNo	| comment
 		'00'	| 'テキストで指定'
 		'01'	| 'clmapで指定'
+		'02'	| 'bgn,endを削除'
 	}
 }

@@ -250,8 +250,8 @@ class WashFormat implements TeaHandle {
 		 */
 		@Override
 		void editNode(TextRange.Node node){
-			node.labels.bgn = bgnCl?.call(node.labels) ?: node.labels.bgn;
-			node.labels.end = endCl?.call(node.labels) ?: node.labels.end;
+			if (bgnCl != null) node.labels.bgn = bgnCl.call(node.labels);
+			if (endCl != null) node.labels.end = endCl.call(node.labels);
 		}
 		
 		/**

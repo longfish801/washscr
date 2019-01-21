@@ -87,3 +87,38 @@ Hello, Washsh.
 
 Hello, Washsh.
 #
+
+#> case 02
+#-script
+	#! washsh
+	#> range
+	#>> tree 箇条書き
+	#-level
+	import java.util.regex.Matcher;
+	{ String line ->
+		if (!(line ==~ /(\t*)[・～].*/)) return -1;
+		return Matcher.getLastMatcher().group(1).length();
+	}
+	#-escape
+	import java.util.regex.Matcher;
+	{ int idx, int endIdx, int level, List lines ->
+		if (idx == endIdx) return true;
+		if (lines[idx] == '' && !(lines[idx + 1] ==~ /(\t*)[・～].*/)) return true;
+		int  curLevel = (lines[idx + 1] ==~ /(\t*)[・～].*/)? Matcher.getLastMatcher().group(1).length() : -1;
+		return (curLevel >= 0 && curLevel < level);
+	}
+	#> format
+	#>> call
+	#-include 箇条書き#elem
+	#-bgn
+	{ Map labels -> return labels.first; }
+#-target
+・Hello, Java.
+～Hello, Groovy.
+#-expected
+・Hello, Java.
+・Hello, Java.
+～Hello, Groovy.
+～Hello, Groovy.
+#
+
