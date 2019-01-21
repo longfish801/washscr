@@ -331,11 +331,11 @@ class WashRange implements TeaHandle {
 			}
 			while (true){
 				int elemLevel = levelCl.call(lines[idx]);
-				if (elemLevel == level) firstLine = lines[idx];
 				if (idx > bgnIdx && elemLevel == level){
 					createElem.call(idx - 1);
 					elemBgnIdx = idx;
 				}
+				if (elemLevel == level) firstLine = lines[idx];
 				boolean isEscape = escapeCl.call(idx, endIdx, level, lines);
 				if (isEscape){
 					createElem.call(idx);

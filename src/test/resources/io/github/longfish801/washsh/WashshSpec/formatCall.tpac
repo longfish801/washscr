@@ -71,3 +71,31 @@ Hello, World.
 */
 Hello, Washsh.
 #
+
+#> case 02
+#-script
+	#! washsh
+	#> range
+	#>> divided 囲み記事
+	#-div －－－
+	#> format
+	#>> call
+	#-include 囲み記事
+	#-bgn
+	{ Map labels -> return null; }
+	#-end
+	{ Map labels -> return null; }
+	#-text
+	{ List lines, Map labels -> return lines.collect { "・${it}" } }
+#-target
+Hello, World.
+－－－
+Hello, Groovy.
+－－－
+Hello, Washsh.
+#-expected
+Hello, World.
+・Hello, Groovy.
+Hello, Washsh.
+#
+
