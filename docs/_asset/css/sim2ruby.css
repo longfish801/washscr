@@ -1,0 +1,91 @@
+@charset "UTF-8";
+
+/*	主にWii用の指定	*/
+@media tv {
+	/*	ルビの縦ずれを補正 rbやrtのfont-size、line-heightによらず0.5em */
+	html body ruby {
+		padding-bottom: 0.5em;
+	}
+}
+
+/* ruby Firefox、Safari、Opera用指定 */
+ruby {
+	display			: inline-table;
+	text-align		: center;
+	text-indent		: 0px;
+	white-space		: nowrap;
+	border			: none;
+	margin			: 0px;
+	padding			: 0px;
+	line-height		: 1;
+	height			: 1em;
+	vertical-align	: text-bottom;
+	border			: none;
+}
+
+/* IE7用指定 */
+*:first-child+html ruby {
+	white-space		: normal;
+}
+/* IE6用指定 */
+* html body ruby {
+	white-space		: normal;
+	display			: inline-table;
+	vertical-align	: baseline;
+}
+
+/* rb Firefox、Safari、Opera用指定 */
+rb {
+	display			: table-row-group;
+	line-height		: 1;
+	text-align		: center;
+	border			: none;
+	margin			: 0px;
+	padding			: 0px;
+	white-space		: nowrap;
+}
+/* IE7用指定 */
+*:first-child+html rb {
+	white-space		: normal;
+}
+/* IE6用指定 */
+* html body ruby rb {
+	display			: table-row-group;
+	vertical-align	: bottom;
+	white-space		: normal;
+}
+
+/* rt Firefox、Safari、Opera用指定 */
+rt {
+	display			: table-header-group;
+	font-size		: 0.625em;	/*	振り仮名のメインテキストに対する相対サイズ	*/
+	line-height		: 1.1;
+	text-align		: center;
+	white-space		: nowrap;
+	border			: none;
+	margin			: 0px;
+	padding			: 0px;
+}
+/* IE7用指定 */
+*:first-child+html rt {
+	white-space		: normal;
+}
+/* IE6用指定 */
+* html body ruby rt {
+	white-space	: normal;
+	line-height	: 1em;
+	display		: table-header-group;
+	position	: static;
+	top			: 0em;
+}
+
+/* rp 全ブラウザ共通指定 */
+rp { display	: none; }
+
+/* hn要素での振り仮名サイズ調整 */
+h1 rt	{	font-size: 0.39em;	}
+h2 rt	{	font-size: 0.42em;	}
+h3 rt	{	font-size: 0.45em;	}
+h4 rt	{	font-size: 0.48em;	}
+h5 rt	{	font-size: 0.52em;	}
+h6 rt	{	font-size: 0.57em;	}

@@ -4,29 +4,26 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<% if (head.containsKey('タイトル')){ %><title><%= head['タイトル'].replaceAll(/<.+?>/, '') %></title><% } %>
-<link href="/_asset/style.css" rel="stylesheet">
-<script src="/_asset/script.js"></script>
+<title><%= clmap.cl('#title').call(outKey) %></title>
+<link href="/washsh/_asset/style.css" rel="stylesheet">
+<script src="/washsh/_asset/script.js"></script>
 </head>
 <body>
 
-<% if (!head.isEmpty() || !index.isEmpty()){ %><header class="container">
-<% if (head.containsKey('タイトル')){ %><h1><%= head['タイトル'] %><% if (head.containsKey('サブタイトル')){ %> <small><%= head['サブタイトル'] %></small><% } %></h1><% } %>
-<% if (head.containsKey('著者名')){ %><div class="author"><%= head['著者名'] %></div><% } %>
-<% if (index.size() > 0){ %><nav class="list-group">
-<% index.each { Map map -> %><a href="<%= map['href'] %>" class="list-group-item"><%= '　' * (map['level'] - 2) %><%= map['title'] %></a>
-<% } %></nav><% } %>
-</header><% } %>
+<header class="container">
+<%= clmap.cl('#fulltitle').call(outKey) %>
+<%= clmap.cl('#author').call(outKey) %>
+<nav class="list-group">
+<%= clmap.cl('#index').call(outKey) %>
+</nav>
+</header>
 
-<% if (body.size() > 0){ %><article class="container">
-<%= body.join("\n\n") %>
-<% if (!note.empty){ %><aside>
-<%= note %>
-</aside><% } %>
-</article><% } %>
+<article class="container">
+<%= clmap.cl('#body').call(outKey) %>
+</article>
 
 <footer class="container">
-<a href="index.html">戻る</a>
+<%= clmap.cl('#backlink').call(outKey) %>
 </footer>
 
 </body>
