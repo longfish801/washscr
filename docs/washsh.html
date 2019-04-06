@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>washsh記法</title>
+<link href="/washsh/_asset/style.css" rel="stylesheet">
+<script src="/washsh/_asset/script.js"></script>
+</head>
+<body>
+
+<header class="container">
+<h1>washsh記法</h1>
+
+<nav class="list-group">
+<a href="#id2_1" class="list-group-item">概要</a>
+<a href="#id2_2" class="list-group-item">構成</a>
+<a href="#id2_3" class="list-group-item">範囲タグ</a>
+<a href="#id3_4" class="list-group-item">　maskタグ</a>
+<a href="#id3_5" class="list-group-item">　dividedタグ</a>
+<a href="#id3_6" class="list-group-item">　enclosedタグ</a>
+<a href="#id3_7" class="list-group-item">　treeタグ</a>
+<a href="#id2_8" class="list-group-item">整形タグ</a>
+<a href="#id3_9" class="list-group-item">　replaceタグ</a>
+<a href="#id3_10" class="list-group-item">　reprexタグ</a>
+<a href="#id3_11" class="list-group-item">　callタグ</a>
+</nav>
+</header>
+
+<article class="container">
+<h2><a name="id2_1"></a>概要</h2>
+
+<p>　washsh記法は、washshスクリプトのための記法です。<br/>
+　washshスクリプトは、テキストの整形に特化したスクリプトです。<br/>
+　文法は<a href="/tpac/tpac.html">tpac記法</a>をベースにしています。<br/>
+　一部の処理には<a href="/clmap/index.html">clmap記法</a>で記述したクロージャを使用します。</p>
+
+<h2><a name="id2_2"></a>構成</h2>
+
+<p>　ファイルに記述する場合、文字コードは UTF-8としてください。</p>
+
+<p>　先頭に宣言をひとつ持ちます。<br/>
+　タグ名は「washsh」です。<br/>
+　スペース区切りで任意の名前を付与してください。名前は省略可です。</p>
+
+<p>　宣言の次行から、タグを記述します。<br/>
+　タグには範囲タグと整形タグの二種類があります。<br/>
+　rangeタグ配下に範囲タグを指定します。<br/>
+　範囲タグには、処理の対象としたい文字列の範囲を定義します。<br/>
+　formatタグ配下に整形タグを指定します。<br/>
+　整形タグには、範囲内の文字列をどう整形するか定義します。</p>
+
+<pre class="code">
+#! washsh 整形スクリプト
+#&gt; range
+ ... 略 ...
+#&gt; format
+ ... 略 ...
+</pre>
+
+<p>　範囲タグで定義した範囲には、範囲名が付されます。<br/>
+　範囲名は範囲タグの名前です。ただし maskタグのみ &quot;masked&quot;が範囲名となります<br/>
+　範囲タグで定義していない箇所は、範囲名が空文字の範囲として扱います。</p>
+
+<p>　rangeタグ、formatタグに名前は不要です。それぞれ最大ひとつ指定します。<br/>
+　formatタグにはマップでキーinclude, excludeを指定できます。<br/>
+　これは各整形タグの include,  excludeのデフォルト値となります。<br/>
+　includeには処理対象とする範囲名を、excludeには処理対象外とする範囲名を記述します。<br/>
+　リストで複数の範囲名を指定することも可能です。<br/>
+　excludeにはマスキングのため、デフォルト値として &quot;masked&quot;が定義されます。<br/>
+　excludeに &quot;masked&quot;を含めないよう設定すると、マスキングがされなくなるため注意してください。</p>
+
+<p>　整形タグにはマップでキーinclude, excludeを指定できます。<br/>
+　includeには処理対象とする範囲名を、excludeには処理対象外とする範囲名を記述します。<br/>
+　リストで複数の範囲名を指定することも可能です。<br/>
+　範囲名が以下の条件を両方とも満たす範囲に対して処理をします。</p>
+
+<ul>
+<li>includeが空、もしくは includeのいずれかひとつでも範囲名が一致する</li>
+<li>excludeのどれとも範囲名が一致しない</li>
+</ul>
+
+<p>　各範囲には、範囲タグごとに独自のラベルを付与します。<br/>
+　出力時、bgn, endラベルの値をそれぞれ開始行、終端行として出力します。<br/>
+　これを変更したい場合は整形タグの callタグを利用してください。</p>
+
+<h2><a name="id2_3"></a>範囲タグ</h2>
+
+<h3><a name="id3_4"></a>maskタグ</h3>
+
+<p>　maskタグでマスキングの範囲を定義します。<br/>
+　maskタグに名前は不要です。最大ひとつ指定します。<br/>
+　マスキングした範囲の範囲名は固定値 &quot;masked&quot;を付します。</p>
+
+<p>　マップでキー bgn, endを指定します。bgnは必須です。<br/>
+　bgnはマスキング開始行あるいはその正規表現を指定します。<br/>
+　endはマスキング終端行あるいはその正規表現を指定します。<br/>
+　end省略時は、終端行は開始行と同じ文字列とみなします。<br/>
+　開始行、終端行は整形後の出力に含みません。</p>
+
+<pre class="code">
+#&gt;&gt; mask
+#-bgn ／＊
+#-end ＊／
+</pre>
+
+<h3><a name="id3_5"></a>dividedタグ</h3>
+
+<p>　dividedタグで区切り行に挟まれた範囲を定義します。<br/>
+　dividedタグには名前が必須です。<br/>
+　区切り行より後に、再び区切り行が存在しない場合はエラーとします。<br/>
+　区切り行に挟まれた範囲を入れ子にすることはできません。</p>
+
+<p>　マップでキー divを指定します。divは必須です。<br/>
+　divは区切り行あるいはその正規表現を指定します。<br/>
+　区切り行を整形したい場合は callタグの bgn, endを利用してください。</p>
+
+<pre class="code">
+#&gt;&gt; divided 囲み記事
+#-div －－－
+</pre>
+
+<p>　dividedタグによる範囲は、以下のラベルを持ちます。</p>
+
+<ul>
+<li>bgn : 区切り行</li>
+<li>end : 区切り行</li>
+</ul>
+
+<h3><a name="id3_6"></a>enclosedタグ</h3>
+
+<p>　enclosedタグで開始行と終端行に挟まれた範囲を定義します。<br/>
+　enclosedタグには名前が必須です。<br/>
+　開始行と終端行は異なる文字列である必要があります。<br/>
+　開始行に対応する終端行が存在しない場合はエラーとします。<br/>
+　開始行と終端行に挟まれた範囲を入れ子にすることができます。</p>
+
+<p>　マップでキー bgn, endを指定します。bgn, endどちらも必須です。<br/>
+　bgnは開始行あるいはその正規表現を指定します。<br/>
+　endは終端行あるいはその正規表現を指定します。<br/>
+　開始行、終端行を整形したい場合は callタグの bgn, endを利用してください。</p>
+
+<pre class="code">
+#&gt;&gt; enclosed コメント
+#-bgn /*
+#-end */
+</pre>
+
+<p>　enclosedタグによる範囲は、以下のラベルを持ちます。</p>
+
+<ul>
+<li>bgn : 開始行</li>
+<li>end : 終端行</li>
+</ul>
+
+<h3><a name="id3_7"></a>treeタグ</h3>
+
+<p>　treeタグでツリー構造の範囲を定義します。<br/>
+　ツリー構造はひとつの枝に複数の葉があり、それが入れ子になる構造です。<br/>
+　treeタグには名前が必須です。<br/>
+　枝の範囲名は treeタグの名前、葉の範囲名は treeタグの名前の後ろに &quot;#elem&quot;を付与したものになります。</p>
+
+<p>　マップでキー level, escapeを指定します。level, escapeどちらも必須です。<br/>
+　levelは、走査している行が葉の開始であれば、その階層を返すクロージャを指定します。<br/>
+　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。<br/>
+　引数は走査位置の行文字列です。<br/>
+　戻り値として葉の開始でなければ -1を、そうでなければ階層（0始まり）を intで返してください。<br/>
+　escapeは枝の終端か否か判定するクロージャを指定します。<br/>
+　このクロージャは葉の開始行以降から呼びます。<br/>
+　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。<br/>
+　第一引数は行の位置、第二引数は走査終了位置、第三引数は階層、第四引数はすべての行のリストです。<br/>
+　戻り値として終端位置か否か判定を booleanで返してください。</p>
+
+<pre class="code">
+#&gt;&gt; tree 箇条書き
+#-level
+import java.util.regex.Matcher;
+{ String line -&gt;
+	if (!(line ==~ /(\t*)・.*/)) return -1;
+	return Matcher.getLastMatcher().group(1).length();
+}
+#-escape
+import java.util.regex.Matcher;
+{ int idx, int endIdx, int level, List lines -&gt;
+	if (idx == endIdx) return true;
+	if (lines[idx] == '' &amp;&amp; !(lines[idx + 1] ==~ /(\t*)・.*/)) return true;
+	int curLevel = (lines[idx + 1] ==~ /(\t*)・.*/)? Matcher.getLastMatcher().group(1).length() : -1;
+	return (curLevel &gt;= 0 &amp;&amp; curLevel &lt; level);
+}
+</pre>
+
+<p>　treeタグによる枝の範囲は、以下のラベルを持ちます。</p>
+
+<ul>
+<li>first : 先頭の葉の一行目</li>
+<li>level : 階層（0始まり）</li>
+<li>size : 葉の個数</li>
+</ul>
+
+<p>　treeタグによる葉の範囲は、以下のラベルを持ちます。</p>
+
+<ul>
+<li>first : 一行目</li>
+<li>number : 何個目の葉か（1始まり）</li>
+</ul>
+
+<h2><a name="id2_8"></a>整形タグ</h2>
+
+<h3><a name="id3_9"></a>replaceタグ</h3>
+
+<p>　replaceタグで固定文字列の置換処理を定義します。</p>
+
+<p>　テキストで検索文字列、置換文字列をタブ区切りで指定します。<br/>
+　改行区切りで検索文字列、置換文字列の組を複数指定できます。</p>
+
+<pre class="code">
+#&gt;&gt; replace
+Hello	Goodbye
+テスト	試験
+</pre>
+
+<h3><a name="id3_10"></a>reprexタグ</h3>
+
+<p>　reprexタグで正規表現の置換処理を定義します。</p>
+
+<p>　テキストで検索文字列、置換文字列をタブ区切りで指定します。<br/>
+　改行区切りで検索文字列、置換文字列の組を複数指定できます。</p>
+
+<pre class="code">
+#&gt;&gt; reprex
+W([\w+])	w$1
+</pre>
+
+<h3><a name="id3_11"></a>callタグ</h3>
+
+<p>　callタグでクロージャによる整形処理を定義します。</p>
+
+<p>　マップでキー bgn, end, textを指定します。bgn, end, textいずれも省略可です。省略時は加工をしません。<br/>
+　bgn, endは開始行、終端行を加工するクロージャを指定します。<br/>
+　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。<br/>
+　引数はラベルです。<br/>
+　戻り値として加工後の文字列を Stringで返してください。なお、nullを返すと行を削除します。<br/>
+　textは範囲内の文字列を加工するクロージャを指定します。<br/>
+　クロージャをテキストで記述するか、clmap記法によるクロージャへの参照を指定します。<br/>
+　引数は、第一引数は範囲内の文字列を行毎に分割したリストです。各要素に改行コードは含みません。第二引数はラベルです。<br/>
+　戻り値として加工後のリストを Listで返してください。なお、nullを返すと行を削除します。</p>
+
+<pre class="code">
+#&gt;&gt; call コラム
+#-include コラム
+#-bgn
+{ Map labels -&gt; return '【コラム：ここから】'; }
+#-end
+{ Map labels -&gt; return '【コラム：ここまで】'; }
+#-text
+{ List lines, Map labels -&gt; return lines.collect { &quot;&gt; ${it}&quot; }; }
+</pre>
+
+<p>以上</p>
+</article>
+
+<footer class="container">
+<a href="index.html">戻る</a>
+</footer>
+
+</body>
+</html>

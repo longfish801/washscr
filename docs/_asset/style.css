@@ -1,0 +1,80 @@
+@charset "utf-8";
+@import url("honoka/css/bootstrap.min.css");
+@import url("css/sim2ruby.css");
+
+/* ボディ */
+body {
+	background-color: #F0F0FF;
+}
+/* コンテナ */
+.container {
+	background-color: #FFFFFF;
+	color: #000000;
+}
+/* 見出し */
+h1, h2, h3, h4, h5, h6 {
+	font-family: "游ゴシック Medium", "游ゴシック体", "Yu Gothic Medium", YuGothic, "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+}
+/* 段落 */
+p {
+	font-family: Georgia,游明朝,"Yu Mincho",YuMincho,"Hiragino Mincho ProN",HGS明朝E,メイリオ,Meiryo,serif;
+	letter-spacing: 0.05em;
+	line-height: 200%;
+	text-align: justify;
+	word-wrap: break-word;
+}
+/* フッタ */
+footer {
+	text-align: right;
+}
+/* 著者名 */
+.author {
+	text-align: right;
+}
+/* 挿入図 */
+figure figcaption {
+	margin: 5px 1em;
+	text-align: center;
+}
+/* 箇条書き */
+ul li.dd {
+	list-style-type: none;
+}
+/* 項目説明 */
+dd {
+	margin: 0px 0px 0px 4em;
+}
+/* 註記 */
+.note dt,dd {
+	line-height: 150%;
+}
+.note dd {
+	margin: 0px 0px 0px 4em;
+}
+/* コード */
+.code {
+	padding: 5px;
+	margin: 0.5em 0px;
+	font-size: 90%;
+	line-height: 120%;
+	overflow: scroll;
+	background-color: #CCCCCC;
+}
+/* インライン要素 */
+em {
+	font-weight: bold;
+	font-style: normal;
+}
+strong {
+	font-weight: bold;
+	font-style: normal;
+	font-size: 130%;
+}
+.dot {
+	-webkit-text-emphasis: filled sesame #000000;
+	text-emphasis: filled sesame #000000;
+}
+.note {
+	font-style: italic;
+	font-size: 85%;
+}
